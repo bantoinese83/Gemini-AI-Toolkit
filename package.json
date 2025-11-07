@@ -1,0 +1,68 @@
+{
+  "name": "gemini-ai-toolkit",
+  "version": "1.0.0",
+  "description": "A comprehensive toolkit for the Google Gemini API, providing easy-to-use interfaces for text, chat, image, video, audio, and grounding features with all the latest Gemini models.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils.js",
+      "require": "./dist/utils.js",
+      "types": "./dist/utils.d.ts"
+    },
+    "./presets": {
+      "import": "./dist/presets.js",
+      "require": "./dist/presets.js",
+      "types": "./dist/presets.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "gemini",
+    "google",
+    "ai",
+    "artificial-intelligence",
+    "llm",
+    "text-generation",
+    "image-generation",
+    "video-generation",
+    "speech-synthesis",
+    "chat",
+    "imagen",
+    "veo"
+  ],
+  "author": "Monarch Labs",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bantoinese83/Gemini-AI-Toolkit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bantoinese83/Gemini-AI-Toolkit/issues"
+  },
+  "homepage": "https://github.com/bantoinese83/Gemini-AI-Toolkit#readme",
+  "dependencies": {
+    "@google/genai": "^1.29.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
