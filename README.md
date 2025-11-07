@@ -1356,7 +1356,7 @@ If you find this package useful, please consider giving it a star! ⭐
 
 <div align="center">
 
-**Made with ❤️ by the community**
+**Made by Monarch Labs**
 
 [⬆ Back to Top](#-gemini-ai-toolkit)
 
