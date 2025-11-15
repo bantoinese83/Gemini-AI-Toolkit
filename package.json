@@ -1,6 +1,6 @@
 {
   "name": "gemini-ai-toolkit",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A comprehensive toolkit for the Google Gemini API, providing easy-to-use interfaces for text, chat, image, video, audio, and grounding features with all the latest Gemini models.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

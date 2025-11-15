@@ -48,6 +48,7 @@ import {
   validateResolution,
 } from './helpers';
 import { sanitizeError, sanitizeApiKeys } from './utils/security';
+import { detectMimeType, extractFileName } from './utils/autoDetect';
 
 /**
  * Configuration for initializing the Gemini Toolkit.

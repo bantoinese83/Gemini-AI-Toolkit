@@ -129,5 +129,37 @@ export {
   streamToText,
 } from './utils';
 
+// Auto-detection utilities
+export {
+  detectMimeType,
+  isImage,
+  isVideo,
+  isAudio,
+  isDocument,
+  suggestModel,
+  detectAspectRatio,
+  detectVideoAspectRatio,
+  extractFileName,
+  isBase64,
+  detectMimeTypeFromDataUrl,
+} from './utils/autoDetect';
+
+// Auto-retry utilities
+export {
+  withAutoRetry,
+  withRetryConfig,
+  type RetryConfig,
+} from './utils/autoRetry';
+
+// Smart helpers (auto-detection + simplification)
+export {
+  smartUploadFile,
+  smartGenerateText,
+  smartAnalyzeImage,
+  smartGenerateImage,
+  smartCreateChat,
+  smartBatch,
+} from './utils/smartHelpers';
+
 // Preset configurations
 export { presets } from './presets';
