@@ -7,12 +7,34 @@ import { ValidationError } from './errors';
 import { AspectRatio, Location } from './types';
 
 /**
- * Validates that a string is not empty.
+ * Validates that a string is not empty and within size limits.
  */
 export function validateNonEmptyString(value: unknown, fieldName: string): asserts value is string {
-  if (typeof value !== 'string' || value.trim().length === 0) {
+  if (value === null || value === undefined) {
     throw new ValidationError(
-      `${fieldName} must be a non-empty string`,
+      `${fieldName} must be a non-empty string, got ${value === null ? 'null' : 'undefined'}`,
+      fieldName
+    );
+  }
+  
+  if (typeof value !== 'string') {
+    throw new ValidationError(
+      `${fieldName} must be a string, got ${typeof value}`,
+      fieldName
+    );
+  }
+  
+  if (value.trim().length === 0) {
+    throw new ValidationError(
+      `${fieldName} must be a non-empty string (whitespace-only strings are not allowed)`,
+      fieldName
+    );
+  }
+  
+  // Validate prompt length limit (for prompts specifically)
+  if (fieldName === 'prompt' && value.length > 1_000_000) {
+    throw new ValidationError(
+      `${fieldName} exceeds maximum length of 1,000,000 characters`,
       fieldName
     );
   }
@@ -51,14 +73,36 @@ export function validatePositiveInteger(
 }
 
 /**
- * Validates base64 string format.
+ * Validates base64 string format and size.
  */
 export function validateBase64(value: unknown, fieldName: string): asserts value is string {
   validateNonEmptyString(value, fieldName);
+  
+  // Remove whitespace (base64 can have whitespace but we normalize it)
+  const normalized = (value as string).replace(/\s/g, '');
+  
+  // Validate format: base64 characters only, proper padding (0-2 = signs)
   const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
-  if (!base64Regex.test(value)) {
+  if (!base64Regex.test(normalized)) {
     throw new ValidationError(
       `${fieldName} must be a valid base64 encoded string`,
+      fieldName
+    );
+  }
+  
+  // Validate length is multiple of 4 (base64 requirement)
+  if (normalized.length % 4 !== 0) {
+    throw new ValidationError(
+      `${fieldName} has invalid base64 padding (length must be multiple of 4)`,
+      fieldName
+    );
+  }
+  
+  // Validate size limit (import from constants to avoid circular dependency)
+  const MAX_BASE64_SIZE = 20_000_000;
+  if (normalized.length > MAX_BASE64_SIZE) {
+    throw new ValidationError(
+      `${fieldName} exceeds maximum size of ${MAX_BASE64_SIZE} characters`,
       fieldName
     );
   }

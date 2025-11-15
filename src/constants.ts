@@ -67,3 +67,15 @@ export const GENERATION_LIMITS = {
   MAX_VIDEOS: 1,
 } as const;
 
+/**
+ * Input size limits to prevent DoS attacks and excessive memory usage.
+ */
+export const INPUT_LIMITS = {
+  MAX_PROMPT_LENGTH: 1_000_000, // ~1MB of text
+  MAX_BASE64_SIZE: 20_000_000, // ~20MB base64 (roughly 15MB decoded)
+  MAX_FILE_SIZE: 100_000_000, // 100MB file size limit
+  MAX_METADATA_ITEMS: 100, // Maximum metadata items per file
+  MAX_METADATA_KEY_LENGTH: 256, // Maximum metadata key length
+  MAX_METADATA_VALUE_LENGTH: 1024, // Maximum metadata value length
+} as const;
+

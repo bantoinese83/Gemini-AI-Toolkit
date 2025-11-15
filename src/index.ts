@@ -16,6 +16,23 @@ export {
   findNearby,
   analyzeImage,
   editImage,
+  queryFileSearch,
+  createFileSearchStore,
+  uploadToFileSearchStore,
+  createEphemeralToken,
+  uploadFile,
+  getFile,
+  listFiles,
+  deleteFile,
+  createCache,
+  listCaches,
+  getCache,
+  updateCache,
+  deleteCache,
+  countTokens,
+  connectMusic,
+  queryWithUrlContext,
+  queryWithUrlContextAndSearch,
   init,
   getToolkit,
 } from './quick';
@@ -41,6 +58,35 @@ export type {
   ImageAspectRatio,
   VideoAspectRatio,
   AspectRatio,
+  FileMetadata,
+  ChunkingConfig,
+  FileSearchUploadConfig,
+  FileSearchImportConfig,
+  FileSearchQueryConfig,
+  EphemeralTokenConfig,
+  EphemeralToken,
+  LiveConnectConstraints,
+  FileObject,
+  UploadFileConfig,
+  CreateCacheConfig,
+  UpdateCacheConfig,
+  CachedContent,
+  TokenCount,
+  UsageMetadata,
+  FunctionDeclaration,
+  FunctionResponse,
+  LiveTool,
+  ContextWindowCompressionConfig,
+  SessionResumptionConfig,
+  RealtimeInputConfig,
+  ThinkingConfig,
+  ProactivityConfig,
+  MediaResolution,
+  WeightedPrompt,
+  MusicGenerationConfig,
+  MusicSessionCallbacks,
+  MusicScale,
+  MusicGenerationMode,
 } from './types';
 
 // Error classes
@@ -54,6 +100,25 @@ export {
 
 // Utilities
 export { fileToBase64, bufferToBase64 } from './utils/mediaUtils';
+
+// Browser-compatible utilities (for client-side usage)
+export {
+  base64ImageToBlobUrl,
+  base64AudioToBlobUrl,
+  fileToBase64Browser,
+  downloadBase64Image,
+  downloadBase64Audio,
+} from './utils/browserUtils';
+
+// Security utilities (for API key protection)
+export {
+  maskApiKey,
+  sanitizeApiKeys,
+  sanitizeError,
+  mightContainApiKey,
+  protectApiKeys,
+  validateApiKeyFormat,
+} from './utils/security';
 
 // Developer-friendly utilities
 export {

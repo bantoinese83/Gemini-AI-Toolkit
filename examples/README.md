@@ -54,6 +54,14 @@ GEMINI_API_KEY=your-api-key-here
 - **[10-grounded-search.ts](./10-grounded-search.ts)** - Google Search grounding
 - **[11-grounded-maps.ts](./11-grounded-maps.ts)** - Google Maps grounding
 - **[12-thinking-mode.ts](./12-thinking-mode.ts)** - Complex reasoning with thinking mode
+- **[16-file-search-rag.ts](./16-file-search-rag.ts)** - File Search (RAG) with document querying
+- **[17-url-context.ts](./17-url-context.ts)** - URL Context for analyzing web pages and PDFs
+- **[18-files-api.ts](./18-files-api.ts)** - Files API for uploading and managing media files
+- **[19-context-caching.ts](./19-context-caching.ts)** - Context caching to reduce costs on repeated requests
+- **[20-token-counting.ts](./20-token-counting.ts)** - Token counting for cost estimation and limits
+- **[21-live-api-tools.ts](./21-live-api-tools.ts)** - Live API with function calling and Google Search
+- **[22-live-api-session-management.ts](./22-live-api-session-management.ts)** - Live API session management (compression, resumption, VAD)
+- **[23-lyria-music-generation.ts](./23-lyria-music-generation.ts)** - Lyria RealTime music generation with interactive control
 
 ### Complete Examples
 - **[13-complete-workflow.ts](./13-complete-workflow.ts)** - End-to-end workflow example
@@ -119,4 +127,22 @@ try {
 - Some examples require file operations (image/video examples)
 - Live conversation examples require browser environment for audio
 - Video generation may take several minutes to complete
+- File Search (RAG) examples require file uploads - operations are asynchronous and need polling
+- File Search stores persist data indefinitely until manually deleted
+- URL Context examples require publicly accessible URLs (no login/paywall)
+- URL Context supports up to 20 URLs per request, max 34MB per URL
+- Files API: Files are automatically deleted after 48 hours
+- Files API: Use when request size exceeds 20MB or for reusable file references
+- Context Caching: Minimum 2,048 tokens (2.5 Flash) or 4,096 tokens (2.5 Pro)
+- Context Caching: Use explicit model versions (e.g., `gemini-2.0-flash-001`)
+- Token Counting: 1 token ≈ 4 characters, 100 tokens ≈ 60-80 words
+- Live API Tools: Function calling requires manual handling in onmessage callback
+- Live API Tools: Google Search may generate executable code
+- Live API Session: Context compression extends sessions beyond 15 minutes
+- Live API Session: Session resumption tokens valid for 2 hours
+- Live API Session: GoAway messages warn before connection termination
+- Lyria RealTime: Experimental model, requires v1alpha API
+- Lyria RealTime: Output is 16-bit PCM, 48kHz, stereo
+- Lyria RealTime: Reset context after BPM or scale changes
+- Lyria RealTime: Implement robust audio buffering for smooth playback
 

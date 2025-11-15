@@ -1,14 +1,19 @@
 /**
  * @file Custom error classes for the Gemini Toolkit.
  * Provides specific error types for better error handling and debugging.
+ * All error messages are automatically sanitized to prevent API key leakage.
  */
+
+import { sanitizeApiKeys } from './utils/security';
 
 /**
  * Base error class for all Gemini Toolkit errors.
+ * Automatically sanitizes messages to prevent API key leakage.
  */
 export class GeminiToolkitError extends Error {
   constructor(message: string, public readonly code?: string) {
-    super(message);
+    // Sanitize message to prevent API key leakage
+    super(sanitizeApiKeys(message));
     this.name = 'GeminiToolkitError';
     Object.setPrototypeOf(this, GeminiToolkitError.prototype);
   }
@@ -48,7 +53,9 @@ export class ApiRequestError extends GeminiToolkitError {
     public readonly statusCode?: number,
     public readonly originalError?: Error
   ) {
-    let helpfulMessage = message;
+    // Sanitize message first
+    const sanitizedMessage = sanitizeApiKeys(message);
+    let helpfulMessage = sanitizedMessage;
     
     // Add helpful suggestions based on status code
     if (statusCode === 401) {
@@ -61,6 +68,12 @@ export class ApiRequestError extends GeminiToolkitError {
     
     super(helpfulMessage, 'API_REQUEST_ERROR');
     this.name = 'ApiRequestError';
+    
+    // Sanitize stack trace if originalError exists
+    if (originalError && originalError.stack) {
+      this.stack = sanitizeApiKeys(originalError.stack);
+    }
+    
     Object.setPrototypeOf(this, ApiRequestError.prototype);
   }
 }

@@ -25,16 +25,38 @@ export function resolveModel(
  * Validates and extracts text from a model response.
  */
 export function extractTextFromResponse(
-  response: { text?: string },
+  response: { text?: string } | null | undefined,
   model: string,
   operation: string = 'generate content'
 ): string {
+  if (!response) {
+    throw new ModelResponseError(
+      `Model ${model} returned null or undefined response for ${operation}.`,
+      model
+    );
+  }
+  
+  if (typeof response !== 'object') {
+    throw new ModelResponseError(
+      `Model ${model} returned invalid response type for ${operation}. Expected object, got ${typeof response}.`,
+      model
+    );
+  }
+  
   if (!response.text) {
     throw new ModelResponseError(
       `Model ${model} did not generate any text for ${operation}. The response may be empty or invalid.`,
       model
     );
   }
+  
+  if (typeof response.text !== 'string') {
+    throw new ModelResponseError(
+      `Model ${model} returned invalid text type for ${operation}. Expected string, got ${typeof response.text}.`,
+      model
+    );
+  }
+  
   return response.text;
 }
 
@@ -42,17 +64,53 @@ export function extractTextFromResponse(
  * Validates and extracts inline data from a model response part.
  */
 export function extractInlineDataFromResponse(
-  part: { inlineData?: { data?: string } } | undefined,
+  part: { inlineData?: { data?: string } } | null | undefined,
   model: string,
   dataType: string = 'data'
 ): string {
-  const data = part?.inlineData?.data;
+  if (!part) {
+    throw new ModelResponseError(
+      `Model ${model} returned null or undefined part for ${dataType}.`,
+      model
+    );
+  }
+  
+  if (typeof part !== 'object') {
+    throw new ModelResponseError(
+      `Model ${model} returned invalid part type for ${dataType}. Expected object, got ${typeof part}.`,
+      model
+    );
+  }
+  
+  if (!part.inlineData) {
+    throw new ModelResponseError(
+      `Model ${model} did not include inlineData in response part for ${dataType}.`,
+      model
+    );
+  }
+  
+  if (typeof part.inlineData !== 'object') {
+    throw new ModelResponseError(
+      `Model ${model} returned invalid inlineData type for ${dataType}. Expected object, got ${typeof part.inlineData}.`,
+      model
+    );
+  }
+  
+  const data = part.inlineData.data;
   if (!data) {
     throw new ModelResponseError(
       `Model ${model} did not generate ${dataType}.`,
       model
     );
   }
+  
+  if (typeof data !== 'string') {
+    throw new ModelResponseError(
+      `Model ${model} returned invalid ${dataType} type. Expected string, got ${typeof data}.`,
+      model
+    );
+  }
+  
   return data;
 }
 

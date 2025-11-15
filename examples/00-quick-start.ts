@@ -18,6 +18,13 @@ import {
   createChat,
   search,
   generateSpeech,
+  queryWithUrlContext,
+  createFileSearchStore,
+  uploadToFileSearchStore,
+  queryFileSearch,
+  uploadFile,
+  createCache,
+  countTokens,
   presets,
   saveImage,
   saveAudio,
@@ -47,6 +54,18 @@ async function quickStartExample() {
   console.log('Search:', results.text.substring(0, 200) + '...');
   console.log();
 
+  // ONE LINE: Analyze URLs
+  try {
+    const urlResult = await queryWithUrlContext(
+      'Summarize the main points from https://www.example.com/article'
+    );
+    console.log('URL Context:', urlResult.text.substring(0, 200) + '...');
+    console.log();
+  } catch (error) {
+    console.log('URL Context: (Skipping - requires valid accessible URL)');
+    console.log();
+  }
+
   // ONE LINE: Generate speech
   const audio = await generateSpeech('Hello, world!');
   console.log('Audio generated!', audio.substring(0, 50) + '...');
@@ -62,6 +81,37 @@ async function quickStartExample() {
   const savedImage = await generateImage('A robot');
   saveImage(savedImage, 'quick-output.png');
   console.log('✓ Image saved with one line!');
+  console.log();
+
+  // File Search (RAG) - Create store and query documents
+  console.log('=== File Search (RAG) ===');
+  try {
+    const store = await createFileSearchStore('quick-start-store');
+    console.log('✓ File Search store created:', (store as { name: string }).name);
+    console.log('  (Upload files with uploadToFileSearchStore, then query with queryFileSearch)');
+  } catch (error) {
+    console.log('  (File Search requires file upload - skipping for quick demo)');
+  }
+
+  // Files API - Upload and use files
+  console.log('=== Files API ===');
+  console.log('  (Upload files with uploadFile, use in generateText with files option)');
+  console.log('  Example: const file = await uploadFile("image.jpg");');
+  console.log('           const result = await generateText("Describe", { files: [file] });');
+
+  // Context Caching
+  console.log('=== Context Caching ===');
+  console.log('  (Cache content to reduce costs on repeated requests)');
+  console.log('  Example: const cache = await createCache("gemini-2.0-flash-001", { contents: [file], ttl: 300 });');
+
+  // Token Counting
+  console.log('=== Token Counting ===');
+  try {
+    const count = await countTokens('Hello, world!');
+    console.log(`✓ Token count example: "${'Hello, world!'}" = ${count.totalTokens} tokens`);
+  } catch (error) {
+    console.log('  (Token counting available)');
+  }
 }
 
 // ============================================

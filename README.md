@@ -48,11 +48,12 @@
 - 🚀 **One-line functions** for minimal code usage
 - 🎨 **79 preset configurations** for common use cases
 - 🛠️ **Developer-friendly utilities** for file operations
+- 📚 **File Search (RAG)** for querying your documents
 - 📦 **Zero dependencies** (only `@google/genai` as peer dependency)
 - 🔒 **Full TypeScript support** with strict type checking
 - ⚡ **Auto API key detection** from environment variables
 - 🎯 **Comprehensive error handling** with helpful messages
-- 📚 **16 detailed examples** covering all features
+- 📚 **18 detailed examples** covering all features
 
 ### Why Gemini AI Toolkit?
 
@@ -85,7 +86,13 @@
 | **🎤 Live Conversations** | Real-time audio conversations | `gemini-2.5-flash-native-audio-preview-09-2025` |
 | **🌐 Grounded Search** | Get up-to-date answers from Google Search | All text models |
 | **🗺️ Grounded Maps** | Find location-based information | All text models |
+| **📚 File Search (RAG)** | Query your documents with Retrieval Augmented Generation | `gemini-2.5-flash`, `gemini-2.5-pro` |
+| **🔗 URL Context** | Analyze content from web pages, PDFs, and URLs | `gemini-2.5-flash`, `gemini-2.5-pro` |
 | **🧠 Thinking Mode** | Tackle complex problems with extended thinking | `gemini-2.5-pro` |
+| **📁 Files API** | Upload, manage, and use media files (images, videos, audio, documents) | All multimodal models |
+| **💾 Context Caching** | Cache content to reduce costs on repeated requests | `gemini-2.0-flash-001`, `gemini-2.5-flash`, `gemini-2.5-pro` |
+| **🔢 Token Counting** | Count tokens for any content before sending to API | All models |
+| **🎵 Lyria RealTime** | Real-time streaming music generation with interactive control | `models/lyria-realtime-exp` (experimental) |
 
 ### 🎁 Developer Experience Features
 
@@ -136,7 +143,7 @@ pnpm add gemini-ai-toolkit
 **Perfect for quick scripts and minimal code usage**
 
 ```typescript
-import { generateText, generateImage, search } from 'gemini-ai-toolkit';
+import { generateText, generateImage, search, queryWithUrlContext, createFileSearchStore, uploadToFileSearchStore, queryFileSearch } from 'gemini-ai-toolkit';
 
 // Set GEMINI_API_KEY environment variable
 // export GEMINI_API_KEY="your-api-key-here"
@@ -145,6 +152,48 @@ import { generateText, generateImage, search } from 'gemini-ai-toolkit';
 const text = await generateText('Explain quantum computing in simple terms');
 const image = await generateImage('A futuristic robot in a cyberpunk city');
 const results = await search('Latest AI developments in 2024');
+
+// File Search (RAG) - query your documents
+const store = await createFileSearchStore('my-documents');
+const operation = await uploadToFileSearchStore('document.pdf', store.name);
+// Wait for operation.done, then query:
+const answer = await queryFileSearch('Tell me about X', {
+  fileSearchStoreNames: [store.name]
+});
+
+// Files API - upload and use files
+const file = await uploadFile('image.jpg', { displayName: 'My Image' });
+const result = await generateText('Describe this image', { files: [file] });
+
+// Context Caching - reduce costs on repeated requests
+const cache = await createCache('gemini-2.0-flash-001', {
+  systemInstruction: 'You are a helpful assistant.',
+  contents: [file],
+  ttl: 300
+});
+const cachedResult = await generateText('What is this?', { cachedContent: cache.name });
+
+// Token Counting - estimate costs
+const tokenCount = await countTokens('Hello, world!');
+console.log(`Tokens: ${tokenCount.totalTokens}`);
+
+// Lyria RealTime - generate music (experimental, requires v1alpha)
+const musicSession = await connectMusic({
+  onmessage: async (message) => {
+    if (message.serverContent?.audioChunks) {
+      // Process audio chunks (16-bit PCM, 48kHz, stereo)
+    }
+  },
+  onerror: (error) => console.error('Error:', error),
+  onclose: () => console.log('Session closed')
+});
+await musicSession.setWeightedPrompts({
+  weightedPrompts: [{ text: 'minimal techno', weight: 1.0 }]
+});
+await musicSession.setMusicGenerationConfig({
+  musicGenerationConfig: { bpm: 90, temperature: 1.0 }
+});
+await musicSession.play();
 ```
 
 ### Option 2: Initialize Once, Use Everywhere
@@ -394,6 +443,326 @@ const toolkit = getToolkit();
 // Use toolkit methods directly
 ```
 
+#### `queryFileSearch(prompt, config, model?, apiKey?)`
+
+Query your documents with File Search (RAG) for accurate, context-aware answers.
+
+```typescript
+import { queryFileSearch, createFileSearchStore, uploadToFileSearchStore } from 'gemini-ai-toolkit';
+
+// Create a File Search store
+const store = await createFileSearchStore('my-documents');
+
+// Upload a file (wait for operation to complete)
+const operation = await uploadToFileSearchStore('document.pdf', store.name);
+// Poll operation.done until true...
+
+// Query your documents
+const result = await queryFileSearch('Tell me about Robert Graves', {
+  fileSearchStoreNames: [store.name]
+});
+console.log(result.text);
+```
+
+**Parameters:**
+- `prompt` (string, required): The query or prompt
+- `config` (FileSearchQueryConfig, required): File Search configuration
+  - `fileSearchStoreNames` (string[], required): Array of File Search store names
+  - `metadataFilter` (string, optional): Metadata filter (e.g., `'author="Robert Graves"'`)
+- `model` (string, optional): Model name (default: `'gemini-2.5-flash'`)
+- `apiKey` (string, optional): API key
+
+**Returns:** `Promise<GroundedResult>` - Query results with citations
+
+#### `createFileSearchStore(displayName?, apiKey?)`
+
+Create a new File Search store for RAG.
+
+```typescript
+import { createFileSearchStore } from 'gemini-ai-toolkit';
+
+const store = await createFileSearchStore('my-documents');
+console.log(store.name); // Use this name for uploads and queries
+```
+
+**Returns:** `Promise<FileSearchStore>` - Created File Search store
+
+#### `createEphemeralToken(config?, apiKey?)`
+
+Create ephemeral token for secure Live API access (server-side only).
+
+```typescript
+import { createEphemeralToken } from 'gemini-ai-toolkit';
+
+// Server-side: Create token
+const token = await createEphemeralToken({
+  uses: 1,
+  expireTime: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+  newSessionExpireTime: new Date(Date.now() + 60 * 1000), // 1 minute
+  liveConnectConstraints: {
+    model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+    config: {
+      temperature: 0.7,
+      responseModalities: ['AUDIO']
+    }
+  }
+});
+// Send token.name to client for use with connectLive()
+```
+
+**Parameters:**
+- `config` (EphemeralTokenConfig, optional): Token configuration
+  - `uses` (number, optional): Number of uses (default: 1)
+  - `expireTime` (Date | string, optional): Expiration (default: 30 minutes)
+  - `newSessionExpireTime` (Date | string, optional): New session expiration (default: 1 minute)
+  - `liveConnectConstraints` (object, optional): Lock token to specific config
+- `apiKey` (string, optional): API key
+
+**Returns:** `Promise<EphemeralToken>` - Token with `name` property (use as API key)
+
+**Note:** ⚠️ Server-side only. Ephemeral tokens enhance security for client-side Live API access.
+
+#### Files API Quick Functions
+
+#### `uploadFile(filePath, config?, apiKey?)`
+
+Quick file upload - minimal code!
+
+```typescript
+import { uploadFile } from 'gemini-ai-toolkit';
+
+const file = await uploadFile('document.pdf', { displayName: 'My Document' });
+```
+
+**Returns:** `Promise<FileObject>`
+
+#### `getFile(fileName, apiKey?)`
+
+Quick file metadata retrieval - minimal code!
+
+```typescript
+import { getFile } from 'gemini-ai-toolkit';
+
+const metadata = await getFile('files/my-file-123');
+```
+
+**Returns:** `Promise<FileObject>`
+
+#### `listFiles(pageSize?, apiKey?)`
+
+Quick file listing - minimal code!
+
+```typescript
+import { listFiles } from 'gemini-ai-toolkit';
+
+const files = await listFiles(10);
+for await (const file of files) {
+  console.log(file.name);
+}
+```
+
+**Returns:** `Promise<Iterable<FileObject>>`
+
+#### `deleteFile(fileName, apiKey?)`
+
+Quick file deletion - minimal code!
+
+```typescript
+import { deleteFile } from 'gemini-ai-toolkit';
+
+await deleteFile('files/my-file-123');
+```
+
+**Returns:** `Promise<void>`
+
+#### Context Caching Quick Functions
+
+#### `createCache(model, config, apiKey?)`
+
+Quick cache creation - minimal code!
+
+```typescript
+import { createCache, uploadFile } from 'gemini-ai-toolkit';
+
+const file = await uploadFile('video.mp4');
+const cache = await createCache('gemini-2.0-flash-001', {
+  displayName: 'my-cache',
+  contents: [file],
+  ttl: 300 // 5 minutes
+});
+```
+
+**Returns:** `Promise<CachedContent>`
+
+#### `listCaches(apiKey?)`
+
+Quick cache listing - minimal code!
+
+```typescript
+import { listCaches } from 'gemini-ai-toolkit';
+
+const caches = await listCaches();
+for await (const cache of caches) {
+  console.log(cache.name);
+}
+```
+
+**Returns:** `Promise<Iterable<CachedContent>>`
+
+#### `getCache(cacheName, apiKey?)`
+
+Quick cache retrieval - minimal code!
+
+```typescript
+import { getCache } from 'gemini-ai-toolkit';
+
+const cache = await getCache('cachedContents/my-cache-123');
+```
+
+**Returns:** `Promise<CachedContent>`
+
+#### `updateCache(cacheName, config, apiKey?)`
+
+Quick cache update - minimal code!
+
+```typescript
+import { updateCache } from 'gemini-ai-toolkit';
+
+await updateCache('cachedContents/my-cache-123', { ttl: '600s' });
+```
+
+**Returns:** `Promise<CachedContent>`
+
+#### `deleteCache(cacheName, apiKey?)`
+
+Quick cache deletion - minimal code!
+
+```typescript
+import { deleteCache } from 'gemini-ai-toolkit';
+
+await deleteCache('cachedContents/my-cache-123');
+```
+
+**Returns:** `Promise<void>`
+
+#### Token Counting Quick Functions
+
+#### `countTokens(contents, model?, apiKey?)`
+
+Quick token counting - minimal code!
+
+```typescript
+import { countTokens } from 'gemini-ai-toolkit';
+
+const count = await countTokens('Hello, world!');
+console.log(count.totalTokens);
+```
+
+**Returns:** `Promise<TokenCount>`
+
+#### `connectMusic(callbacks, apiKey?)`
+
+Quick music session connection - minimal code!
+
+```typescript
+import { connectMusic } from 'gemini-ai-toolkit';
+
+const session = await connectMusic({
+  onmessage: async (message) => {
+    // Handle audio chunks
+  },
+  onerror: (error) => console.error('Error:', error),
+  onclose: () => console.log('Closed')
+});
+```
+
+**Returns:** `Promise<MusicSession>` - Music session object
+
+**Note:** ⚠️ Experimental model, requires v1alpha API.
+
+#### `uploadToFileSearchStore(filePath, fileSearchStoreName, config?, apiKey?)`
+
+Upload a file directly to a File Search store (combines upload and import).
+
+```typescript
+import { uploadToFileSearchStore } from 'gemini-ai-toolkit';
+
+const operation = await uploadToFileSearchStore(
+  'document.pdf',
+  store.name,
+  {
+    displayName: 'My Document',
+    customMetadata: [
+      { key: 'author', stringValue: 'Robert Graves' },
+      { key: 'year', numericValue: 1934 }
+    ],
+    chunkingConfig: {
+      whiteSpaceConfig: {
+        maxTokensPerChunk: 200,
+        maxOverlapTokens: 20
+      }
+    }
+  }
+);
+
+// Poll operation.done until true
+while (!operation.done) {
+  await new Promise(resolve => setTimeout(resolve, 5000));
+  operation = await getClient().operations.get({ operation });
+}
+```
+
+**Parameters:**
+- `filePath` (string, required): Path to the file to upload
+- `fileSearchStoreName` (string, required): Name of the File Search store
+- `config` (FileSearchUploadConfig, optional): Upload configuration
+  - `displayName` (string, optional): Display name for the file
+  - `customMetadata` (FileMetadata[], optional): Custom metadata
+  - `chunkingConfig` (ChunkingConfig, optional): Chunking configuration
+- `apiKey` (string, optional): API key
+
+**Returns:** `Promise<Operation>` - Operation that can be polled for completion
+
+#### `queryWithUrlContext(prompt, model?, apiKey?)`
+
+Query content from URLs using the URL Context tool. URLs should be included in the prompt text.
+
+```typescript
+import { queryWithUrlContext } from 'gemini-ai-toolkit';
+
+const result = await queryWithUrlContext(
+  'Compare the ingredients from https://example.com/recipe1 and https://example.com/recipe2'
+);
+console.log(result.text);
+
+// Access URL retrieval metadata
+const urlMetadata = result.candidates?.[0]?.urlContextMetadata;
+console.log(urlMetadata);
+```
+
+**Parameters:**
+- `prompt` (string, required): The prompt containing URLs to analyze
+- `model` (string, optional): Model name (default: `'gemini-2.5-flash'`)
+- `apiKey` (string, optional): API key
+
+**Returns:** `Promise<GroundedResult>` - Query results with URL metadata
+
+**Note:** Up to 20 URLs can be processed per request. Maximum 34MB per URL.
+
+#### `queryWithUrlContextAndSearch(prompt, model?, apiKey?)`
+
+Query with both URL Context and Google Search tools enabled.
+
+```typescript
+import { queryWithUrlContextAndSearch } from 'gemini-ai-toolkit';
+
+const result = await queryWithUrlContextAndSearch(
+  'Find AI trends and analyze https://example.com/ai-report'
+);
+```
+
+**Returns:** `Promise<GroundedResult>` - Combined search and URL analysis results
+
 ---
 
 ### Class API (GeminiToolkit)
@@ -566,11 +935,45 @@ const audioBase64 = await toolkit.generateSpeech('Hello, world!', {
 - `model` (string): Model name
 - `voiceName` (string): `'Kore'` or `'Zephyr'`
 
-##### `connectLive(callbacks, options?)`
+##### `createEphemeralToken(config?)`
 
-Connect to live conversation session.
+Create an ephemeral token for secure Live API access from client-side applications.
+
+⚠️ **Server-side only** - Call this from your backend, not client-side.
 
 ```typescript
+// Server-side: Create ephemeral token
+const token = await toolkit.createEphemeralToken({
+  uses: 1, // Token can only be used once
+  expireTime: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+  newSessionExpireTime: new Date(Date.now() + 60 * 1000), // 1 minute
+  liveConnectConstraints: {
+    model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+    config: {
+      temperature: 0.7,
+      responseModalities: ['AUDIO']
+    }
+  }
+});
+
+// Send token.name to client
+// Client uses token.name as API key for connectLive()
+```
+
+**Options:**
+- `uses` (number): Number of times token can be used (default: 1)
+- `expireTime` (Date | string): Token expiration (default: 30 minutes)
+- `newSessionExpireTime` (Date | string): New session expiration (default: 1 minute)
+- `liveConnectConstraints` (object): Lock token to specific config
+
+**Returns:** `EphemeralToken` with `name` property (use as API key)
+
+##### `connectLive(callbacks, options?, ephemeralToken?)`
+
+Connect to live conversation session. Can use standard API key or ephemeral token.
+
+```typescript
+// Basic usage with standard API key
 const session = await toolkit.connectLive({
   onopen: () => console.log('Connected'),
   onmessage: async (message) => {
@@ -580,8 +983,99 @@ const session = await toolkit.connectLive({
   onclose: () => console.log('Disconnected')
 });
 
+// Using ephemeral token (client-side, enhanced security)
+const session = await toolkit.connectLive(
+  {
+    onopen: () => console.log('Connected'),
+    onmessage: async (message) => {
+      console.log('Received:', message);
+    },
+    onerror: (error) => console.error('Error:', error),
+    onclose: () => console.log('Disconnected')
+  },
+  {}, // options
+  ephemeralToken.name // Token from server
+);
+
+// With function calling
+const session = await toolkit.connectLive({
+  onopen: () => console.log('Connected'),
+  onmessage: async (message) => {
+    // Handle tool calls
+    if (message.toolCall) {
+      const functionResponses = [];
+      for (const fc of message.toolCall.functionCalls) {
+        functionResponses.push({
+          id: fc.id,
+          name: fc.name,
+          response: { result: 'ok' }
+        });
+      }
+      await session.sendToolResponse({ functionResponses });
+    }
+  },
+  onerror: (error) => console.error('Error:', error),
+  onclose: () => console.log('Disconnected')
+}, {
+  tools: [{
+    functionDeclarations: [
+      { name: 'turn_on_lights' },
+      { name: 'turn_off_lights', behavior: 'NON_BLOCKING' }
+    ]
+  }]
+});
+
+// With Google Search
+const session = await toolkit.connectLive({
+  onopen: () => console.log('Connected'),
+  onmessage: async (message) => {
+    // Handle search results
+    if (message.serverContent?.modelTurn?.parts) {
+      for (const part of message.serverContent.modelTurn.parts) {
+        if (part.executableCode) {
+          console.log('Code:', part.executableCode.code);
+        }
+      }
+    }
+  },
+  onerror: (error) => console.error('Error:', error),
+  onclose: () => console.log('Disconnected')
+}, {
+  tools: [{ googleSearch: {} }]
+});
+
+// With session management
+const session = await toolkit.connectLive({
+  onopen: () => console.log('Connected'),
+  onmessage: async (message) => {
+    // Handle session resumption updates
+    if (message.sessionResumptionUpdate?.newHandle) {
+      // Save handle for resuming session
+      const newHandle = message.sessionResumptionUpdate.newHandle;
+    }
+    
+    // Handle GoAway message
+    if (message.goAway) {
+      console.log('Connection closing soon:', message.goAway.timeLeft);
+    }
+    
+    // Handle generation complete
+    if (message.serverContent?.generationComplete) {
+      console.log('Generation complete');
+    }
+  },
+  onerror: (error) => console.error('Error:', error),
+  onclose: () => console.log('Disconnected')
+}, {
+  contextWindowCompression: { slidingWindow: {} },
+  sessionResumption: { handle: previousSessionHandle }
+});
+
 // Send audio
 await session.sendAudio(audioData);
+
+// Send text
+session.sendClientContent({ turns: 'Hello!', turnComplete: true });
 
 // Close session
 await session.close();
@@ -590,8 +1084,154 @@ await session.close();
 **Callbacks:**
 - `onopen()`: Called when connection opens
 - `onmessage(message)`: Called when message received
+  - Check `message.toolCall` for function calls
+  - Check `message.serverContent` for model responses
+  - Check `message.sessionResumptionUpdate` for resumption tokens
+  - Check `message.goAway` for connection termination warnings
 - `onerror(error)`: Called on error
 - `onclose(event)`: Called when connection closes
+
+**Options:**
+- `model` (string): Model name (default: Live model)
+- `voiceName` (string): Voice name (default: 'Zephyr')
+- `responseModalities` (Modality[]): Response modalities (default: ['AUDIO'])
+- `tools` (LiveTool[]): Tools to enable (function calling, Google Search)
+- `inputAudioTranscription` (boolean): Enable input audio transcription
+- `outputAudioTranscription` (boolean): Enable output audio transcription
+- `contextWindowCompression` (ContextWindowCompressionConfig): Enable compression for longer sessions
+- `sessionResumption` (SessionResumptionConfig): Configure session resumption
+- `realtimeInputConfig` (RealtimeInputConfig): Configure VAD settings
+- `thinkingConfig` (ThinkingConfig): Configure thinking budget
+- `enableAffectiveDialog` (boolean): Enable affective dialog (requires v1alpha)
+- `proactivity` (ProactivityConfig): Configure proactive audio
+- `mediaResolution` (MediaResolution): Set media resolution
+- `temperature` (number): Temperature setting
+
+**Ephemeral Token:**
+- Pass `ephemeralToken.name` as third parameter for client-side security
+- Ephemeral tokens are short-lived and reduce security risks
+
+**Tool Use:**
+- Function calling: Define functions in `tools[].functionDeclarations`
+- Google Search: Enable with `tools: [{ googleSearch: {} }]`
+- Handle tool calls in `onmessage` callback
+- Respond with `session.sendToolResponse({ functionResponses })`
+
+**Session Management:**
+- Context window compression: Extend sessions beyond 15 minutes
+- Session resumption: Resume sessions across connection resets
+- GoAway messages: Receive warnings before connection termination
+
+##### `connectMusic(callbacks, apiKey?)`
+
+Connect to Lyria RealTime music generation session for real-time streaming music.
+
+⚠️ **Experimental**: Lyria RealTime is an experimental model.
+
+⚠️ **Requires v1alpha API**: This feature requires the v1alpha API version.
+
+```typescript
+const session = await toolkit.connectMusic({
+  onmessage: async (message) => {
+    // Process audio chunks (16-bit PCM, 48kHz, stereo)
+    if (message.serverContent?.audioChunks) {
+      for (const chunk of message.serverContent.audioChunks) {
+        const audioBuffer = Buffer.from(chunk.data, 'base64');
+        // Play audio...
+      }
+    }
+  },
+  onerror: (error) => console.error('Error:', error),
+  onclose: () => console.log('Session closed')
+});
+
+// Set initial prompts
+await session.setWeightedPrompts({
+  weightedPrompts: [
+    { text: 'minimal techno', weight: 1.0 },
+    { text: 'deep bass', weight: 0.5 }
+  ]
+});
+
+// Set generation config
+await session.setMusicGenerationConfig({
+  musicGenerationConfig: {
+    bpm: 90,
+    temperature: 1.0,
+    density: 0.7,
+    brightness: 0.6,
+    scale: 'C_MAJOR_A_MINOR',
+    audioFormat: 'pcm16',
+    sampleRateHz: 48000
+  }
+});
+
+// Start generating music
+await session.play();
+
+// Control playback
+await session.pause();
+await session.play();
+await session.stop();
+await session.resetContext();
+
+// Update prompts in real-time
+await session.setWeightedPrompts({
+  weightedPrompts: [
+    { text: 'Piano', weight: 2.0 },
+    { text: 'Meditation', weight: 0.5 }
+  ]
+});
+
+// Update config (reset context for BPM/scale changes)
+await session.setMusicGenerationConfig({
+  musicGenerationConfig: {
+    bpm: 120,
+    scale: 'D_MAJOR_B_MINOR'
+  }
+});
+await session.resetContext();
+```
+
+**Callbacks:**
+- `onmessage(message)`: Called when audio chunks or other messages are received
+- `onerror(error)`: Called when an error occurs
+- `onclose()`: Called when the session closes
+
+**Session Methods:**
+- `setWeightedPrompts({ weightedPrompts })`: Set or update music prompts
+- `setMusicGenerationConfig({ musicGenerationConfig })`: Set or update generation config
+- `play()`: Start/resume music generation
+- `pause()`: Pause music generation
+- `stop()`: Stop music generation
+- `resetContext()`: Reset context (required after BPM/scale changes)
+
+**Music Generation Config:**
+- `guidance` (0.0-6.0, default: 4.0): How strictly model follows prompts
+- `bpm` (60-200): Beats Per Minute
+- `density` (0.0-1.0): Density of musical notes/sounds
+- `brightness` (0.0-1.0): Tonal quality
+- `scale` (MusicScale): Musical scale/key
+- `muteBass` (boolean): Mute bass output
+- `muteDrums` (boolean): Mute drums output
+- `onlyBassAndDrums` (boolean): Only output bass and drums
+- `musicGenerationMode` ('QUALITY' | 'DIVERSITY' | 'VOCALIZATION'): Generation mode
+- `temperature` (0.0-3.0, default: 1.1): Temperature setting
+- `topK` (1-1000, default: 40): Top K sampling
+- `seed` (0-2147483647): Random seed
+- `audioFormat` (string, default: 'pcm16'): Audio format
+- `sampleRateHz` (number, default: 48000): Sample rate
+
+**Audio Format:**
+- Output: Raw 16-bit PCM Audio
+- Sample rate: 48kHz
+- Channels: 2 (stereo)
+
+**Note:** 
+- Prompts are checked by safety filters
+- Output audio is watermarked
+- Model generates instrumental music only
+- Implement robust audio buffering for smooth playback
 
 ##### `groundWithSearch(prompt, model?)`
 
@@ -623,6 +1263,68 @@ const result = await toolkit.groundWithMaps(
 
 **Returns:** `GroundedResult`
 
+##### URL Context Methods
+
+##### `generateWithUrlContext(prompt, model?)`
+
+Generate text with URL Context tool enabled, allowing the model to access content from URLs.
+
+```typescript
+// Basic usage - URLs in prompt
+const result = await toolkit.generateWithUrlContext(
+  'Compare the ingredients from https://example.com/recipe1 and https://example.com/recipe2'
+);
+console.log(result.text);
+
+// Access URL retrieval metadata
+const urlMetadata = result.candidates?.[0]?.urlContextMetadata;
+if (urlMetadata?.urlMetadata) {
+  urlMetadata.urlMetadata.forEach((meta) => {
+    console.log(`URL: ${meta.retrievedUrl}`);
+    console.log(`Status: ${meta.urlRetrievalStatus}`);
+  });
+}
+```
+
+**Parameters:**
+- `prompt` (string): The prompt containing URLs to analyze (URLs should be in the prompt text)
+- `model` (string, optional): Model name (default: `'gemini-2.5-flash'`)
+
+**Returns:** `Promise<GroundedResult>` - Results with URL metadata
+
+**Limitations:**
+- Up to 20 URLs per request
+- Maximum 34MB per URL
+- URLs must be publicly accessible (no login/paywall)
+- Supported content types: HTML, JSON, PDF, images (PNG, JPEG, BMP, WebP)
+
+**Use Cases:**
+- Extract data from multiple URLs
+- Compare documents, articles, or reports
+- Synthesize content from several sources
+- Analyze code and documentation from GitHub
+
+##### `generateWithUrlContextAndSearch(prompt, model?)`
+
+Generate text with both URL Context and Google Search tools enabled.
+
+```typescript
+const result = await toolkit.generateWithUrlContextAndSearch(
+  'Find the latest AI developments and analyze https://example.com/ai-report'
+);
+```
+
+**Use Cases:**
+- Search the web and then analyze specific URLs in depth
+- Combine broad search with detailed URL analysis
+- Get comprehensive answers using both tools
+
+**Parameters:**
+- `prompt` (string): The prompt containing URLs and/or search queries
+- `model` (string, optional): Model name (default: `'gemini-2.5-flash'`)
+
+**Returns:** `Promise<GroundedResult>` - Combined results
+
 ##### `generateWithThinking(prompt, thinkingBudget?, model?)`
 
 Generate text with extended thinking capabilities.
@@ -639,6 +1341,461 @@ const result = await toolkit.generateWithThinking(
 - `prompt` (string): The problem to solve
 - `thinkingBudget` (number): Tokens for thinking (default: 32768)
 - `model` (string): Model name (default: `'gemini-2.5-pro'`)
+
+##### Files API Methods
+
+##### `uploadFile(filePath, config?)`
+
+Upload a file using the Files API. Use when request size exceeds 20MB or for reusable file references.
+
+```typescript
+// Node.js
+const file = await toolkit.uploadFile('document.pdf', {
+  displayName: 'My Document',
+  mimeType: 'application/pdf'
+});
+
+// Browser
+const fileInput = document.querySelector('input[type="file"]');
+const file = await toolkit.uploadFile(fileInput.files[0], {
+  displayName: 'My Document'
+});
+
+// Use in generateText
+const result = await toolkit.generateText('Describe this document', {
+  files: [file]
+});
+```
+
+**Parameters:**
+- `filePath` (string | File | Blob): Path to file (Node.js) or File/Blob (browser)
+- `config` (UploadFileConfig | string, optional): Configuration or display name
+
+**Returns:** `Promise<FileObject>` - Uploaded file with metadata
+
+##### `getFile(fileName)`
+
+Get metadata for an uploaded file.
+
+```typescript
+const file = await toolkit.uploadFile('document.pdf');
+const metadata = await toolkit.getFile(file.name);
+console.log(metadata.state); // 'ACTIVE' or 'PROCESSING'
+```
+
+**Returns:** `Promise<FileObject>`
+
+##### `listFiles(pageSize?)`
+
+List all uploaded files.
+
+```typescript
+const files = await toolkit.listFiles(10);
+for await (const file of files) {
+  console.log(file.name, file.displayName);
+}
+```
+
+**Returns:** `Promise<Iterable<FileObject>>`
+
+##### `deleteFile(fileName)`
+
+Delete an uploaded file.
+
+```typescript
+await toolkit.deleteFile('files/my-file-123');
+```
+
+**Returns:** `Promise<void>`
+
+##### Context Caching Methods
+
+##### `createCache(model, config)`
+
+Create a cache for context caching to reduce costs on repeated requests.
+
+```typescript
+const videoFile = await toolkit.uploadFile('movie.mp4');
+
+// Wait for processing
+while (videoFile.state !== 'ACTIVE') {
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  videoFile = await toolkit.getFile(videoFile.name);
+}
+
+const cache = await toolkit.createCache('gemini-2.0-flash-001', {
+  displayName: 'movie-analysis-cache',
+  systemInstruction: 'You are an expert video analyzer.',
+  contents: [videoFile],
+  ttl: '300s' // 5 minutes
+});
+
+// Use cache
+const result = await toolkit.generateText('Describe the characters', {
+  cachedContent: cache.name
+});
+```
+
+**Parameters:**
+- `model` (string): Model name (must use explicit version like `gemini-2.0-flash-001`)
+- `config` (CreateCacheConfig): Cache configuration
+  - `displayName` (string, optional): Display name
+  - `systemInstruction` (string, optional): System instruction to cache
+  - `contents` (unknown[], optional): Contents to cache
+  - `ttl` (string | number, optional): Time to live (e.g., `'300s'` or `300`)
+  - `expireTime` (Date | string, optional): Expiration time
+
+**Returns:** `Promise<CachedContent>`
+
+**Note:** Minimum 2,048 tokens (2.5 Flash) or 4,096 tokens (2.5 Pro). Cached tokens billed at reduced rate.
+
+##### `listCaches()`
+
+List all cached content objects.
+
+```typescript
+const caches = await toolkit.listCaches();
+for await (const cache of caches) {
+  console.log(cache.name, cache.displayName);
+}
+```
+
+**Returns:** `Promise<Iterable<CachedContent>>`
+
+##### `getCache(cacheName)`
+
+Get metadata for a cached content object.
+
+```typescript
+const cache = await toolkit.getCache('cachedContents/my-cache-123');
+console.log(cache.expireTime);
+```
+
+**Returns:** `Promise<CachedContent>`
+
+##### `updateCache(cacheName, config)`
+
+Update a cache's TTL or expiration time.
+
+```typescript
+await toolkit.updateCache(cache.name, { ttl: '600s' });
+```
+
+**Returns:** `Promise<CachedContent>`
+
+##### `deleteCache(cacheName)`
+
+Delete a cached content object.
+
+```typescript
+await toolkit.deleteCache('cachedContents/my-cache-123');
+```
+
+**Returns:** `Promise<void>`
+
+##### Token Counting Methods
+
+##### `countTokens(contents, model?)`
+
+Count tokens for any content before sending to the API.
+
+```typescript
+// Count text tokens
+const count = await toolkit.countTokens('Hello, world!');
+console.log(count.totalTokens);
+
+// Count tokens for file + text
+const file = await toolkit.uploadFile('image.jpg');
+const count = await toolkit.countTokens(['Describe this image', file]);
+
+// Count chat history
+const chat = toolkit.createChat();
+await chat.sendMessage({ message: 'Hello' });
+const count = await toolkit.countTokens(chat.getHistory());
+```
+
+**Parameters:**
+- `contents` (unknown): Content to count (text, files, chat history, etc.)
+- `model` (string, optional): Model name (default: `'gemini-2.5-flash'`)
+
+**Returns:** `Promise<TokenCount>` - Token count result
+
+**Note:** 1 token ≈ 4 characters, 100 tokens ≈ 60-80 words. Images: 258 tokens (2.0) or variable. Video: 263 tokens/sec. Audio: 32 tokens/sec.
+
+##### Ephemeral Token Methods
+
+##### `createEphemeralToken(config?)`
+
+Create an ephemeral token for secure Live API access from client-side applications.
+
+⚠️ **Server-side only** - Call this from your backend, not client-side.
+
+```typescript
+// Server-side: Create ephemeral token
+const token = await toolkit.createEphemeralToken({
+  uses: 1, // Token can only be used once
+  expireTime: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+  newSessionExpireTime: new Date(Date.now() + 60 * 1000), // 1 minute
+  liveConnectConstraints: {
+    model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+    config: {
+      temperature: 0.7,
+      responseModalities: ['AUDIO']
+    }
+  }
+});
+
+// Send token.name to client
+// Client uses token.name as API key for connectLive()
+```
+
+**Options:**
+- `uses` (number): Number of times token can be used (default: 1)
+- `expireTime` (Date | string): Token expiration (default: 30 minutes)
+- `newSessionExpireTime` (Date | string): New session expiration (default: 1 minute)
+- `liveConnectConstraints` (object): Lock token to specific config
+
+**Returns:** `EphemeralToken` with `name` property (use as API key)
+
+##### File Search (RAG) Methods
+
+##### `createFileSearchStore(displayName?)`
+
+Create a new File Search store for RAG.
+
+```typescript
+const store = await toolkit.createFileSearchStore('my-documents');
+console.log(store.name); // Use this for uploads and queries
+```
+
+**Parameters:**
+- `displayName` (string, optional): Display name for the store
+
+**Returns:** `Promise<FileSearchStore>` - Created File Search store
+
+##### `listFileSearchStores()`
+
+List all File Search stores.
+
+```typescript
+const stores = toolkit.listFileSearchStores();
+for await (const store of stores) {
+  console.log(store.name, store.displayName);
+}
+```
+
+**Returns:** `AsyncIterable<FileSearchStore>` - Iterable of File Search stores
+
+##### `getFileSearchStore(name)`
+
+Get a specific File Search store by name.
+
+```typescript
+const store = await toolkit.getFileSearchStore('fileSearchStores/my-store-123');
+```
+
+**Parameters:**
+- `name` (string): Store name (e.g., `'fileSearchStores/my-store-123'`)
+
+**Returns:** `Promise<FileSearchStore>` - File Search store
+
+##### `deleteFileSearchStore(name, force?)`
+
+Delete a File Search store.
+
+```typescript
+await toolkit.deleteFileSearchStore('fileSearchStores/my-store-123', true);
+```
+
+**Parameters:**
+- `name` (string): Store name to delete
+- `force` (boolean): Force delete (default: `true`)
+
+##### `uploadToFileSearchStore(filePath, fileSearchStoreName, config?)`
+
+Upload a file directly to a File Search store (combines upload and import).
+
+```typescript
+const operation = await toolkit.uploadToFileSearchStore(
+  'document.pdf',
+  store.name,
+  {
+    displayName: 'My Document',
+    customMetadata: [
+      { key: 'author', stringValue: 'Robert Graves' },
+      { key: 'year', numericValue: 1934 }
+    ],
+    chunkingConfig: {
+      whiteSpaceConfig: {
+        maxTokensPerChunk: 200,
+        maxOverlapTokens: 20
+      }
+    }
+  }
+);
+
+// Poll for completion
+while (!operation.done) {
+  await new Promise(resolve => setTimeout(resolve, 5000));
+  operation = await toolkit.getClient().operations.get({ operation });
+}
+```
+
+**Parameters:**
+- `filePath` (string): Path to the file to upload
+- `fileSearchStoreName` (string): Name of the File Search store
+- `config` (FileSearchUploadConfig, optional): Upload configuration
+  - `displayName` (string, optional): Display name for the file
+  - `customMetadata` (FileMetadata[], optional): Custom metadata
+  - `chunkingConfig` (ChunkingConfig, optional): Chunking configuration
+
+**Returns:** `Promise<Operation>` - Operation that can be polled for completion
+
+##### Files API Methods
+
+##### `uploadFile(filePath, config?)`
+
+Upload a file using the Files API. Use this when request size exceeds 20MB or for reusable file references.
+
+```typescript
+// Node.js
+const file = await toolkit.uploadFile('document.pdf', { 
+  displayName: 'My Document',
+  mimeType: 'application/pdf'
+});
+
+// Browser
+const fileInput = document.querySelector('input[type="file"]');
+const file = await toolkit.uploadFile(fileInput.files[0], { 
+  displayName: 'My Document' 
+});
+
+// Use file in generateText
+const result = await toolkit.generateText('Describe this document', {
+  files: [file]
+});
+```
+
+**Parameters:**
+- `filePath` (string | File | Blob): Path to file (Node.js) or File/Blob (browser)
+- `config` (UploadFileConfig | string, optional): Configuration or display name
+  - `displayName` (string, optional): Display name for the file
+  - `mimeType` (string, optional): MIME type (auto-detected if not provided)
+
+**Returns:** `Promise<FileObject>` - Uploaded file with metadata
+
+**Note:** Files are automatically deleted after 48 hours. Use for files larger than 20MB or when you need to reuse files across multiple requests.
+
+##### `getFile(fileName)`
+
+Get metadata for an uploaded file.
+
+```typescript
+const file = await toolkit.uploadFile('document.pdf');
+const metadata = await toolkit.getFile(file.name);
+console.log(metadata.state); // 'ACTIVE' or 'PROCESSING'
+console.log(metadata.sizeBytes);
+console.log(metadata.expireTime);
+```
+
+**Parameters:**
+- `fileName` (string): Name of the file (from uploadFile response)
+
+**Returns:** `Promise<FileObject>` - File metadata
+
+##### `listFiles(pageSize?)`
+
+List all uploaded files.
+
+```typescript
+const files = await toolkit.listFiles(10);
+for await (const file of files) {
+  console.log(file.name, file.displayName, file.state);
+}
+```
+
+**Parameters:**
+- `pageSize` (number, optional): Page size for pagination (max: 100)
+
+**Returns:** `Promise<Iterable<FileObject>>` - Iterable of files
+
+##### `deleteFile(fileName)`
+
+Delete an uploaded file.
+
+```typescript
+const file = await toolkit.uploadFile('document.pdf');
+await toolkit.deleteFile(file.name);
+```
+
+**Parameters:**
+- `fileName` (string): Name of the file to delete
+
+**Returns:** `Promise<void>`
+
+##### `importFileToFileSearchStore(fileSearchStoreName, fileName, config?)`
+
+Import an existing file into a File Search store.
+
+```typescript
+const operation = await toolkit.importFileToFileSearchStore(
+  store.name,
+  uploadedFile.name,
+  {
+    customMetadata: [
+      { key: 'author', stringValue: 'Robert Graves' }
+    ],
+    chunkingConfig: {
+      whiteSpaceConfig: {
+        maxTokensPerChunk: 200,
+        maxOverlapTokens: 20
+      }
+    }
+  }
+);
+```
+
+**Parameters:**
+- `fileSearchStoreName` (string): Name of the File Search store
+- `fileName` (string): Name of the file (from Files API)
+- `config` (FileSearchImportConfig, optional): Import configuration
+
+**Returns:** `Promise<Operation>` - Operation that can be polled for completion
+
+##### `queryWithFileSearch(prompt, config, model?)`
+
+Query documents with File Search (RAG) to get answers grounded in uploaded documents.
+
+```typescript
+// Basic query
+const result = await toolkit.queryWithFileSearch(
+  'Tell me about Robert Graves',
+  { fileSearchStoreNames: [store.name] }
+);
+console.log(result.text);
+
+// Query with metadata filter
+const filteredResult = await toolkit.queryWithFileSearch(
+  "Tell me about the book 'I, Claudius'",
+  {
+    fileSearchStoreNames: [store.name],
+    metadataFilter: 'author="Robert Graves"'
+  }
+);
+
+// Access citations
+const citations = result.candidates?.[0]?.groundingMetadata;
+console.log(citations);
+```
+
+**Parameters:**
+- `prompt` (string): The query or prompt
+- `config` (FileSearchQueryConfig): File Search configuration
+  - `fileSearchStoreNames` (string[]): Array of File Search store names
+  - `metadataFilter` (string, optional): Metadata filter (e.g., `'author="Robert Graves"'`)
+- `model` (string, optional): Model name (default: `'gemini-2.5-flash'`)
+
+**Returns:** `Promise<GroundedResult>` - Query results with citations
 
 ---
 
@@ -809,23 +1966,79 @@ const quick = await analyzeImage(img, 'Quick', 'image/jpeg', presets.analysis.qu
 
 ## 🛠️ Utilities
 
-### File Utilities
+### File Utilities (Node.js)
 
 ```typescript
 import { saveImage, saveAudio, loadImage } from 'gemini-ai-toolkit';
 
-// Save generated image
+// Save generated image (Node.js only)
 const imageBase64 = await generateImage('A robot');
 saveImage(imageBase64, 'output.png');
 
-// Save generated audio
+// Save generated audio (Node.js only)
 const audioBase64 = await generateSpeech('Hello!');
 saveAudio(audioBase64, 'output.wav');
 
-// Load image from file
+// Load image from file (Node.js only)
 const imageBase64 = await loadImage('input.png');
 const edited = await editImage(imageBase64, 'image/png', 'Add sunset');
 ```
+
+### Browser-Compatible Utilities
+
+```typescript
+import {
+  base64ImageToBlobUrl,
+  base64AudioToBlobUrl,
+  fileToBase64Browser,
+  downloadBase64Image,
+  downloadBase64Audio,
+} from 'gemini-ai-toolkit';
+
+// Convert base64 to Blob URL for display
+const imageBase64 = await generateImage('A robot');
+const imageUrl = base64ImageToBlobUrl(imageBase64, 'image/png');
+// Use in React: <img src={imageUrl} />
+
+// Convert File to base64 (browser)
+const fileInput = document.querySelector('input[type="file"]');
+const file = fileInput.files[0];
+const base64 = await fileToBase64Browser(file);
+
+// Download files in browser
+downloadBase64Image(imageBase64, 'robot.png', 'image/png');
+downloadBase64Audio(audioBase64, 'hello.wav', 'audio/wav');
+```
+
+### Security Utilities
+
+Protect API keys from accidental leakage:
+
+```typescript
+import { maskApiKey, sanitizeApiKeys, sanitizeError, protectApiKeys } from 'gemini-ai-toolkit';
+
+// Mask API keys for safe logging
+const masked = maskApiKey('sk-1234567890abcdef');
+console.log('API Key:', masked); // "sk-1...cdef"
+
+// Sanitize text that might contain API keys
+const safeText = sanitizeApiKeys('Error: API key sk-1234567890abcdef is invalid');
+// Returns: "Error: API key sk-12...cdef is invalid"
+
+// Sanitize error objects (automatically done in toolkit errors)
+try {
+  await generateText('Hello');
+} catch (error) {
+  const safeError = sanitizeError(error);
+  // safeError.message and safeError.stack are sanitized
+}
+
+// Protect objects from serialization
+const config = protectApiKeys({ apiKey: 'sk-1234567890abcdef' });
+JSON.stringify(config); // API key is masked
+```
+
+**Note:** All error messages and stack traces are automatically sanitized by the toolkit to prevent API key leakage.
 
 ### Batch Operations
 
@@ -950,9 +2163,38 @@ import type {
   ImageAspectRatio,
   VideoAspectRatio,
   
+  // File Search Types
+  FileMetadata,
+  ChunkingConfig,
+  FileSearchUploadConfig,
+  FileSearchImportConfig,
+  FileSearchQueryConfig,
+  
+  // Ephemeral Token Types
+  EphemeralTokenConfig,
+  EphemeralToken,
+  LiveConnectConstraints,
+  
   // Events
   LiveErrorEvent,
   LiveCloseEvent,
+  
+  // Live API Tool Types
+  FunctionDeclaration,
+  FunctionResponse,
+  LiveTool,
+  ContextWindowCompressionConfig,
+  SessionResumptionConfig,
+  RealtimeInputConfig,
+  AutomaticActivityDetectionConfig,
+  ThinkingConfig,
+  ProactivityConfig,
+  MediaResolution,
+  WeightedPrompt,
+  MusicGenerationConfig,
+  MusicSessionCallbacks,
+  MusicScale,
+  MusicGenerationMode,
 } from 'gemini-ai-toolkit';
 ```
 
@@ -974,13 +2216,86 @@ const message: ChatMessage = {
   role: 'user',
   content: 'Hello!'
 };
+
+// File Search metadata
+const metadata: FileMetadata[] = [
+  { key: 'author', stringValue: 'Robert Graves' },
+  { key: 'year', numericValue: 1934 }
+];
+
+// Ephemeral token configuration
+const tokenConfig: EphemeralTokenConfig = {
+  uses: 1,
+  expireTime: new Date(Date.now() + 30 * 60 * 1000),
+  liveConnectConstraints: {
+    model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+    config: {
+      temperature: 0.7,
+      responseModalities: ['AUDIO']
+    }
+  }
+};
+
+// File Search query config
+const queryConfig: FileSearchQueryConfig = {
+  fileSearchStoreNames: ['fileSearchStores/my-store-123'],
+  metadataFilter: 'author="Robert Graves"'
+};
+
+// Chunking configuration
+const chunkingConfig: ChunkingConfig = {
+  whiteSpaceConfig: {
+    maxTokensPerChunk: 200,
+    maxOverlapTokens: 20
+  }
+};
+
+// Live API function declaration
+const functionDecl: FunctionDeclaration = {
+  name: 'turn_on_lights',
+  description: 'Turn on the lights',
+  behavior: 'NON_BLOCKING'
+};
+
+// Live API tool
+const liveTool: LiveTool = {
+  functionDeclarations: [functionDecl],
+  googleSearch: {}
+};
+
+// Live API session resumption
+const sessionResumption: SessionResumptionConfig = {
+  handle: 'previous-session-handle'
+};
+
+// Live API context compression
+const compression: ContextWindowCompressionConfig = {
+  slidingWindow: {},
+  triggerTokens: 100000
+};
+
+// Lyria RealTime weighted prompt
+const weightedPrompt: WeightedPrompt = {
+  text: 'minimal techno',
+  weight: 1.0
+};
+
+// Lyria RealTime music generation config
+const musicConfig: MusicGenerationConfig = {
+  bpm: 90,
+  temperature: 1.0,
+  density: 0.7,
+  brightness: 0.6,
+  scale: 'C_MAJOR_A_MINOR',
+  musicGenerationMode: 'QUALITY'
+};
 ```
 
 ---
 
 ## 📖 Examples
 
-We provide **16 comprehensive examples** covering all features:
+We provide **23 comprehensive examples** covering all features:
 
 ### Quick Start
 - **[00-quick-start.ts](./examples/00-quick-start.ts)** - ⚡ Start here! Minimal code examples
@@ -1006,6 +2321,11 @@ We provide **16 comprehensive examples** covering all features:
 - **[10-grounded-search.ts](./examples/10-grounded-search.ts)** - Google Search grounding
 - **[11-grounded-maps.ts](./examples/11-grounded-maps.ts)** - Google Maps grounding
 - **[12-thinking-mode.ts](./examples/12-thinking-mode.ts)** - Complex reasoning
+- **[16-file-search-rag.ts](./examples/16-file-search-rag.ts)** - File Search (RAG) with document querying
+- **[17-url-context.ts](./examples/17-url-context.ts)** - URL Context for analyzing web pages and PDFs
+- **[18-files-api.ts](./examples/18-files-api.ts)** - Files API for uploading and managing media files
+- **[19-context-caching.ts](./examples/19-context-caching.ts)** - Context caching to reduce costs on repeated requests
+- **[20-token-counting.ts](./examples/20-token-counting.ts)** - Token counting for cost estimation and limits
 
 ### Complete Examples
 - **[13-complete-workflow.ts](./examples/13-complete-workflow.ts)** - End-to-end workflow
@@ -1054,11 +2374,46 @@ try {
 - Use environment variables
 - Use `init()` for applications
 - Store keys securely
+- Use security utilities for logging
 
 **❌ DON'T:**
 - Hardcode API keys
 - Commit keys to version control
 - Share keys publicly
+- Log API keys directly
+
+**🔒 API Key Protection:**
+
+The toolkit automatically sanitizes all error messages and stack traces to prevent API key leakage:
+
+```typescript
+import { maskApiKey, sanitizeApiKeys } from 'gemini-ai-toolkit';
+
+// Mask API keys when logging
+console.log('Using key:', maskApiKey(apiKey)); // "sk-1...cdef"
+
+// Sanitize text that might contain API keys
+const safeText = sanitizeApiKeys(errorMessage);
+```
+
+**🔐 Ephemeral Tokens for Live API:**
+
+For client-side Live API access, use ephemeral tokens instead of API keys:
+
+```typescript
+// Server-side: Create ephemeral token
+import { createEphemeralToken } from 'gemini-ai-toolkit';
+
+const token = await createEphemeralToken({
+  uses: 1,
+  expireTime: new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
+});
+
+// Send token.name to client
+// Client uses token.name as API key for connectLive()
+```
+
+See [SECURITY.md](./SECURITY.md) for comprehensive security guidelines.
 
 ### 3. Rate Limiting
 
@@ -1170,15 +2525,71 @@ for await (const chunk of stream) {
 
 ## 📋 Requirements
 
-- **Node.js** >= 18.0.0
+- **Node.js** >= 18.0.0 (for server-side usage)
+- **Modern browser** (for client-side usage)
 - **TypeScript** >= 5.0 (optional, but recommended)
 - **Google Gemini API Key** ([Get one here](https://makersuite.google.com/app/apikey))
 
-### Browser Support
+### Client & Server Support
 
-This package is designed for **Node.js** environments. For browser usage, you may need polyfills for:
-- `fs` module (file operations)
-- `Buffer` (binary data)
+This package works in **both Node.js and browser environments**:
+
+#### ✅ Universal (Works Everywhere)
+- Core API methods (`generateText`, `generateImage`, `createChat`, etc.)
+- All quick functions
+- File Search (RAG) - accepts File/Blob in browser, file paths in Node.js
+- URL Context
+- All grounding features (Search, Maps)
+- Presets
+
+#### ⚠️ Node.js Only
+- File utilities: `saveImage()`, `saveAudio()`, `loadImage()`
+- File system operations: `fileToBase64()` (file path version)
+
+#### 🌐 Browser-Compatible Alternatives
+For browser usage, use these utilities instead:
+- `base64ImageToBlobUrl()` - Convert base64 image to Blob URL
+- `base64AudioToBlobUrl()` - Convert base64 audio to Blob URL
+- `fileToBase64Browser()` - Convert File/Blob to base64
+- `downloadBase64Image()` - Download image in browser
+- `downloadBase64Audio()` - Download audio in browser
+
+### Usage Examples
+
+**Node.js (Server):**
+```typescript
+import { generateText, saveImage } from 'gemini-ai-toolkit';
+
+const text = await generateText('Hello!');
+const image = await generateImage('A robot');
+saveImage(image, 'output.png'); // ✅ Works in Node.js
+```
+
+**Browser (Client):**
+```typescript
+import { generateText, base64ImageToBlobUrl, downloadBase64Image } from 'gemini-ai-toolkit';
+
+const text = await generateText('Hello!');
+const image = await generateImage('A robot');
+
+// Option 1: Display in <img>
+const imageUrl = base64ImageToBlobUrl(image, 'image/png');
+// <img src={imageUrl} />
+
+// Option 2: Download
+downloadBase64Image(image, 'robot.png', 'image/png');
+```
+
+**File Search in Browser:**
+```typescript
+import { uploadToFileSearchStore, createFileSearchStore } from 'gemini-ai-toolkit';
+
+const store = await createFileSearchStore('my-docs');
+const fileInput = document.querySelector('input[type="file"]');
+const file = fileInput.files[0]; // Browser File object
+
+const operation = await uploadToFileSearchStore(file, store.name); // ✅ Works!
+```
 
 ---
 
