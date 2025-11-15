@@ -328,29 +328,39 @@ echo "GEMINI_API_KEY=your-api-key-here" > .env
 
 ## 💡 Examples & Demos
 
-### 🎯 SaaS Showcase (7 Complete Apps)
+### 🎯 Interactive Demos (7 Complete Applications)
 
-Experience **7 fully-functional SaaS applications** built with Gemini AI Toolkit:
+Explore **7 fully-functional applications** built with modern web technologies and Gemini AI Toolkit:
 
 ```bash
-# Install and run the complete SaaS showcase
-npm run demo
+# Run the interactive demo showcase
+cd demo-showcase && npm install && npm run dev
 
-# Or run individual demos
-npm run demo:install  # Install dependencies first
-cd demo-showcase && npm start
+# Or run individual demos directly
+cd demos/adflow-studio && npm install && npm run dev      # Next.js
+cd demos/talkbase && npm install && npm run dev           # Next.js
+cd demos/maplens-ai && npm install && npm run dev         # Next.js
+cd demos/scenewriter-pro && npm install && npm run dev    # Vite
 ```
 
-**Featured Applications:**
-- **AdFlow Studio** - AI-powered social media ad creation
-- **TalkBase** - Conversational knowledge assistant with real-time search
-- **MapLens AI** - Local business content generation with Maps integration
-- **SceneWriter Pro** - Automated video script and storyboard creation
-- **InstaTranscribe** - Real-time audio/video analysis and insights
-- **PixSense** - Photo intelligence and content analysis API
-- **GemVoice** - AI voice companion with contextual conversations
+**Next.js Applications (Full-Stack):**
+- **AdFlow Studio** 🎬 - Automated social media ad creation from product photos
+- **TalkBase** 🎯 - Conversational AI with real-time search and memory
+- **MapLens AI** 🏪 - Local business content with Google Maps integration
 
-[📖 Complete Showcase Documentation](./demo-showcase/README.md)
+**Vite Applications (Feature-Focused):**
+- **SceneWriter Pro** 🎭 - AI-powered video script and production planning
+- **GemVoice** 🗣️ - Advanced voice synthesis and text-to-speech
+- **InstaTranscribe** 📝 - Real-time audio transcription with speaker ID
+- **PixSense** 👁️ - Computer vision and image analysis capabilities
+
+[📖 Demo Showcase Documentation](./demo-showcase/README.md)
+
+**Getting Started with Demos:**
+1. Get your Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Set environment variable: `export GEMINI_API_KEY="your-key-here"`
+3. Run any demo with `npm install && npm run dev`
+4. Open browser and start exploring AI capabilities!
 
 ### 🔧 Code Examples
 

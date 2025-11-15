@@ -1,19 +1,31 @@
 {
-  "name": "adflow-studio-demo",
-  "version": "1.0.0",
-  "description": "AdFlow Studio — Smart Ad Automation SaaS Demo",
-  "main": "index.js",
+  "name": "adflow-studio",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
   "dependencies": {
-    "gemini-ai-toolkit": "latest",
-    "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1",
-    "ejs": "^3.1.9"
+    "@types/multer": "^2.0.0",
+    "form-data": "^4.0.4",
+    "gemini-ai-toolkit": "^1.4.0",
+    "multer": "^2.0.2",
+    "next": "16.0.3",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   },
-  "keywords": ["ai", "ads", "automation", "social-media", "gemini"],
-  "author": "Gemini AI Toolkit",
-  "license": "Apache-2.0"
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
 }

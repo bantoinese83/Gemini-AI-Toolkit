@@ -1,21 +1,27 @@
 {
-  "name": "gemini-saas-showcase",
-  "version": "1.0.0",
-  "description": "Gemini AI SaaS Showcase - 7 AI-Powered Business Solutions",
-  "main": "index.js",
+  "name": "demo-showcase",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js",
-    "demo:adflow": "cd ../demos/adflow-studio && npm start",
-    "demo:talkbase": "cd ../demos/talkbase && npm start",
-    "demo:maplens": "cd ../demos/maplens-ai && npm start"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "ejs": "^3.1.9",
-    "gemini-ai-toolkit": "file:../"
+    "next": "16.0.3",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   },
-  "keywords": ["ai", "saas", "showcase", "gemini", "business", "automation"],
-  "author": "Gemini AI Toolkit",
-  "license": "Apache-2.0"
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
 }
