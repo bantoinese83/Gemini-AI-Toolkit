@@ -116,8 +116,30 @@ export async function withAutoRetry<T>(
   operation: () => Promise<T>,
   config: RetryConfig = {}
 ): Promise<T> {
+  // Defensive checks
+  if (typeof operation !== 'function') {
+    throw new Error('withAutoRetry: operation must be a function');
+  }
+  
   const finalConfig: Required<RetryConfig> = { ...DEFAULT_CONFIG, ...config };
+  
+  // Validate config values
+  if (finalConfig.maxRetries < 0 || finalConfig.maxRetries > 100) {
+    throw new Error('withAutoRetry: maxRetries must be between 0 and 100');
+  }
+  if (finalConfig.initialDelay < 0 || finalConfig.initialDelay > 60000) {
+    throw new Error('withAutoRetry: initialDelay must be between 0 and 60000ms');
+  }
+  if (finalConfig.maxDelay < finalConfig.initialDelay) {
+    throw new Error('withAutoRetry: maxDelay must be >= initialDelay');
+  }
+  if (finalConfig.backoffMultiplier < 1 || finalConfig.backoffMultiplier > 10) {
+    throw new Error('withAutoRetry: backoffMultiplier must be between 1 and 10');
+  }
+  
   let lastError: unknown;
+  const startTime = Date.now();
+  const MAX_TOTAL_TIME = 300000; // 5 minutes max total retry time
 
   for (let attempt = 0; attempt <= finalConfig.maxRetries; attempt++) {
     try {
@@ -130,6 +152,12 @@ export async function withAutoRetry<T>(
         break;
       }
 
+      // Check if we've exceeded max total time
+      const elapsed = Date.now() - startTime;
+      if (elapsed > MAX_TOTAL_TIME) {
+        throw new Error(`withAutoRetry: Exceeded maximum total retry time of ${MAX_TOTAL_TIME}ms. Last error: ${error instanceof Error ? error.message : String(error)}`);
+      }
+
       // Check if error should be retried
       if (!shouldRetryError(error, finalConfig, attempt)) {
         throw error;
@@ -139,6 +167,11 @@ export async function withAutoRetry<T>(
       const delay = calculateDelay(attempt, finalConfig);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
+  }
+
+  // Ensure we have an error to throw
+  if (lastError === undefined) {
+    throw new Error('withAutoRetry: Operation failed but no error was captured');
   }
 
   throw lastError;

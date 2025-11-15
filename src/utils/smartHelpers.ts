@@ -30,17 +30,40 @@ export async function smartUploadFile(
   file: string | File | Blob,
   displayName?: string
 ) {
-  // Auto-detect display name
-  const fileName = displayName || extractFileName(file);
+  // Defensive checks
+  if (!toolkit) {
+    throw new Error('smartUploadFile: toolkit parameter is required');
+  }
+  if (file === null || file === undefined) {
+    throw new Error('smartUploadFile: file parameter is required');
+  }
+  
+  // Validate file path if string
+  if (typeof file === 'string') {
+    if (file.trim().length === 0) {
+      throw new Error('smartUploadFile: file path cannot be empty');
+    }
+    if (file.length > 4096) {
+      throw new Error('smartUploadFile: file path exceeds maximum length of 4096 characters');
+    }
+  }
+  
+  // Auto-detect display name with fallback
+  const fileName = displayName?.trim() || extractFileName(file) || 'untitled';
+  if (fileName.length === 0) {
+    throw new Error('smartUploadFile: unable to determine file name');
+  }
   
   // Auto-detect MIME type
   let mimeType: string | undefined;
   if (typeof file === 'string') {
     mimeType = detectMimeType(file);
   } else if (file instanceof File) {
-    mimeType = file.type || detectMimeType(file.name);
+    mimeType = file.type || (file.name ? detectMimeType(file.name) : undefined);
   } else if (file instanceof Blob) {
     mimeType = file.type || 'application/octet-stream';
+  } else {
+    throw new Error('smartUploadFile: file must be a string path, File, or Blob');
   }
 
   return toolkit.uploadFile(file, {
@@ -76,19 +99,47 @@ export async function smartGenerateText(
   files?: (string | { uri?: string; name?: string; mimeType?: string })[],
   usePro: boolean = false
 ): Promise<string> {
+  // Defensive checks
+  if (!toolkit) {
+    throw new Error('smartGenerateText: toolkit parameter is required');
+  }
+  if (!prompt || typeof prompt !== 'string') {
+    throw new Error('smartGenerateText: prompt must be a non-empty string');
+  }
+  if (prompt.trim().length === 0) {
+    throw new Error('smartGenerateText: prompt cannot be empty or whitespace-only');
+  }
+  
+  // Validate files array if provided
+  if (files !== undefined) {
+    if (!Array.isArray(files)) {
+      throw new Error('smartGenerateText: files must be an array');
+    }
+    if (files.length > 100) {
+      throw new Error('smartGenerateText: files array exceeds maximum length of 100');
+    }
+  }
+  
   // Detect if files contain images/videos
   let hasImage = false;
   let hasVideo = false;
 
   if (files && files.length > 0) {
     for (const file of files) {
+      if (file === null || file === undefined) {
+        continue; // Skip null/undefined entries
+      }
       if (typeof file === 'string') {
-        hasImage = hasImage || isImage(file);
-        hasVideo = hasVideo || isVideo(file);
+        if (file.trim().length > 0) {
+          hasImage = hasImage || isImage(file);
+          hasVideo = hasVideo || isVideo(file);
+        }
       } else if (file && typeof file === 'object') {
         const mimeType = file.mimeType || '';
-        hasImage = hasImage || mimeType.startsWith('image/');
-        hasVideo = hasVideo || mimeType.startsWith('video/');
+        if (mimeType) {
+          hasImage = hasImage || mimeType.startsWith('image/');
+          hasVideo = hasVideo || mimeType.startsWith('video/');
+        }
       }
     }
   }
@@ -125,29 +176,66 @@ export async function smartAnalyzeImage(
   image: string | File | Blob,
   prompt: string
 ): Promise<string> {
+  // Defensive checks
+  if (!toolkit) {
+    throw new Error('smartAnalyzeImage: toolkit parameter is required');
+  }
+  if (image === null || image === undefined) {
+    throw new Error('smartAnalyzeImage: image parameter is required');
+  }
+  if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+    throw new Error('smartAnalyzeImage: prompt must be a non-empty string');
+  }
+  
   let imageBase64: string;
   let mimeType: string;
 
   if (typeof image === 'string') {
+    if (image.trim().length === 0) {
+      throw new Error('smartAnalyzeImage: image path or data cannot be empty');
+    }
+    
     // Check if it's a file path or base64
     if (image.startsWith('data:') || image.length > 100) {
       // Likely base64
       imageBase64 = image.includes(',') ? image.split(',')[1] : image;
+      if (!imageBase64 || imageBase64.trim().length === 0) {
+        throw new Error('smartAnalyzeImage: invalid base64 data');
+      }
       mimeType = image.startsWith('data:') 
         ? (image.match(/^data:([^;]+);base64,/) || [])[1] || 'image/png'
         : 'image/png';
     } else {
+      // File path - validate length
+      if (image.length > 4096) {
+        throw new Error('smartAnalyzeImage: file path exceeds maximum length of 4096 characters');
+      }
       // File path - need to read and convert
       const { fileToBase64 } = await import('./mediaUtils');
       imageBase64 = await fileToBase64(image);
       mimeType = detectMimeType(image);
     }
   } else {
+    // File or Blob - validate size
+    if (image instanceof File || image instanceof Blob) {
+      if (image.size === 0) {
+        throw new Error('smartAnalyzeImage: file is empty');
+      }
+      // Check reasonable size limit (100MB)
+      const MAX_FILE_SIZE = 100 * 1024 * 1024;
+      if (image.size > MAX_FILE_SIZE) {
+        throw new Error(`smartAnalyzeImage: file size (${image.size} bytes) exceeds maximum of ${MAX_FILE_SIZE} bytes`);
+      }
+    }
+    
     // File or Blob - convert to base64
     const { fileToBase64Browser } = await import('./browserUtils');
     imageBase64 = await fileToBase64Browser(image);
+    if (!imageBase64 || imageBase64.trim().length === 0) {
+      throw new Error('smartAnalyzeImage: failed to convert file to base64');
+    }
     mimeType = image instanceof File 
-      ? (image.type || detectMimeType(image.name))
+      ? (image.type || (image.name ? detectMimeType(image.name) : 'image/png'))
       : (image.type || 'image/png');
   }
 
@@ -220,28 +308,82 @@ export async function smartBatch<T>(
     onProgress?: (completed: number, total: number) => void;
   } = {}
 ): Promise<T[]> {
+  // Defensive checks
+  if (!toolkit) {
+    throw new Error('smartBatch: toolkit parameter is required');
+  }
+  if (!Array.isArray(operations)) {
+    throw new Error('smartBatch: operations must be an array');
+  }
+  if (operations.length === 0) {
+    return []; // Return empty array for empty operations
+  }
+  if (operations.length > 1000) {
+    throw new Error('smartBatch: operations array exceeds maximum length of 1000');
+  }
+  
+  // Validate operations are functions
+  for (let i = 0; i < operations.length; i++) {
+    if (typeof operations[i] !== 'function') {
+      throw new Error(`smartBatch: operations[${i}] must be a function`);
+    }
+  }
+  
   const { concurrency = 3, retry = true, onProgress } = options;
+  
+  // Validate concurrency
+  if (typeof concurrency !== 'number' || concurrency < 1 || concurrency > 100) {
+    throw new Error('smartBatch: concurrency must be a number between 1 and 100');
+  }
+  
   const results: T[] = [];
   const total = operations.length;
+  const errors: Array<{ index: number; error: unknown }> = [];
 
-  // Process in batches
+  // Process in batches with error handling
   for (let i = 0; i < operations.length; i += concurrency) {
     const batch = operations.slice(i, i + concurrency);
+    const batchIndices = batch.map((_, idx) => i + idx);
     
-    const batchResults = await Promise.all(
-      batch.map(async (operation) => {
-        const op = retry 
-          ? () => withAutoRetry(operation, { maxRetries: 2 })
-          : operation;
-        return op();
+    const batchResults = await Promise.allSettled(
+      batch.map(async (operation, batchIdx) => {
+        try {
+          const op = retry 
+            ? () => withAutoRetry(operation, { maxRetries: 2 })
+            : operation;
+          return await op();
+        } catch (error) {
+          errors.push({ index: batchIndices[batchIdx], error });
+          throw error; // Re-throw to mark as rejected in Promise.allSettled
+        }
       })
     );
 
-    results.push(...batchResults);
+    // Process results and handle errors
+    for (let j = 0; j < batchResults.length; j++) {
+      const result = batchResults[j];
+      if (result.status === 'fulfilled') {
+        results.push(result.value);
+      } else {
+        // Error already logged in errors array
+        // Optionally, you could push a default value or re-throw
+        throw new Error(`smartBatch: Operation at index ${batchIndices[j]} failed: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`);
+      }
+    }
     
     if (onProgress) {
-      onProgress(results.length, total);
+      try {
+        onProgress(results.length, total);
+      } catch (progressError) {
+        // Don't let progress callback errors break the batch
+        console.warn('smartBatch: onProgress callback threw an error:', progressError);
+      }
     }
+  }
+
+  if (errors.length > 0 && results.length === 0) {
+    // If all operations failed, throw the first error
+    throw errors[0].error;
   }
 
   return results;

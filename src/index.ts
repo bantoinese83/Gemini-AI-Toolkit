@@ -161,5 +161,12 @@ export {
   smartBatch,
 } from './utils/smartHelpers';
 
+// Request queuing utilities
+export {
+  RequestQueue,
+  createRequestQueue,
+  type RequestQueueConfig,
+} from './utils/requestQueue';
+
 // Preset configurations
 export { presets } from './presets';

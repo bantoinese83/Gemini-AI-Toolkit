@@ -62,6 +62,7 @@ GEMINI_API_KEY=your-api-key-here
 - **[21-live-api-tools.ts](./21-live-api-tools.ts)** - Live API with function calling and Google Search
 - **[22-live-api-session-management.ts](./22-live-api-session-management.ts)** - Live API session management (compression, resumption, VAD)
 - **[23-lyria-music-generation.ts](./23-lyria-music-generation.ts)** - Lyria RealTime music generation with interactive control
+- **[24-smart-utilities.ts](./24-smart-utilities.ts)** - Auto-detection utilities, auto-retry, and smart helpers
 
 ### Complete Examples
 - **[13-complete-workflow.ts](./13-complete-workflow.ts)** - End-to-end workflow example
@@ -145,4 +146,7 @@ try {
 - Lyria RealTime: Output is 16-bit PCM, 48kHz, stereo
 - Lyria RealTime: Reset context after BPM or scale changes
 - Lyria RealTime: Implement robust audio buffering for smooth playback
+- Smart Utilities: Auto-detection utilities automatically detect MIME types, file types, and suggest models
+- Smart Utilities: Auto-retry utilities handle transient errors with exponential backoff
+- Smart Utilities: Smart helpers reduce boilerplate with automatic detection and model selection
 

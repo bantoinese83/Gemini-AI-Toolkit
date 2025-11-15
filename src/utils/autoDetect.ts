@@ -17,7 +17,18 @@
  * ```
  */
 export function detectMimeType(filePath: string): string {
+  // Defensive checks
   if (!filePath || typeof filePath !== 'string') {
+    return 'application/octet-stream';
+  }
+  
+  // Handle empty strings
+  if (filePath.trim().length === 0) {
+    return 'application/octet-stream';
+  }
+  
+  // Handle very long paths (potential DoS)
+  if (filePath.length > 4096) {
     return 'application/octet-stream';
   }
 
@@ -25,6 +36,11 @@ export function detectMimeType(filePath: string): string {
   const extension = filePath.includes('.')
     ? filePath.split('.').pop()?.toLowerCase() || ''
     : filePath.toLowerCase().replace(/^\./, '');
+  
+  // Validate extension is reasonable length
+  if (extension.length > 20) {
+    return 'application/octet-stream';
+  }
 
   // Comprehensive MIME type mapping
   const mimeTypes: Record<string, string> = {
@@ -269,15 +285,24 @@ export function detectVideoAspectRatio(width: number, height: number): '16:9' | 
  */
 export function extractFileName(filePath: string | File | Blob): string {
   if (typeof filePath === 'string') {
-    // Node.js path
+    // Handle empty strings
+    if (filePath.trim().length === 0) {
+      return 'untitled';
+    }
+    // Node.js path - handle both forward and backslashes
     const parts = filePath.split(/[/\\]/);
-    return parts[parts.length - 1] || filePath;
+    const fileName = parts[parts.length - 1] || filePath;
+    // Return filename or fallback to 'untitled' if empty
+    return fileName.trim() || 'untitled';
   } else if (filePath instanceof File) {
-    return filePath.name;
+    // File object - use name property
+    return filePath.name || 'untitled';
   } else if (filePath instanceof Blob) {
+    // Blob - no name available
     return 'blob';
   }
-  return 'unknown';
+  // Fallback for unknown types
+  return 'untitled';
 }
 
 /**
@@ -288,12 +313,29 @@ export function isBase64(content: string): boolean {
     return false;
   }
   
+  // Handle empty strings
+  if (content.trim().length === 0) {
+    return false;
+  }
+  
   // Remove data URL prefix if present
   const base64 = content.includes(',') ? content.split(',')[1] : content;
   
+  // Validate base64 is not empty after extraction
+  if (!base64 || base64.trim().length === 0) {
+    return false;
+  }
+  
   // Check if it's valid base64
   const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
-  return base64Regex.test(base64.replace(/\s/g, ''));
+  const normalized = base64.replace(/\s/g, '');
+  
+  // Check length is multiple of 4 (base64 requirement)
+  if (normalized.length % 4 !== 0) {
+    return false;
+  }
+  
+  return base64Regex.test(normalized);
 }
 
 /**

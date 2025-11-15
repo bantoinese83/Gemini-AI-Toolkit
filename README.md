@@ -48,12 +48,13 @@
 - 🚀 **One-line functions** for minimal code usage
 - 🎨 **79 preset configurations** for common use cases
 - 🛠️ **Developer-friendly utilities** for file operations
+- 🤖 **Smart helpers** with auto-detection and auto-retry
 - 📚 **File Search (RAG)** for querying your documents
 - 📦 **Zero dependencies** (only `@google/genai` as peer dependency)
 - 🔒 **Full TypeScript support** with strict type checking
 - ⚡ **Auto API key detection** from environment variables
 - 🎯 **Comprehensive error handling** with helpful messages
-- 📚 **18 detailed examples** covering all features
+- 📚 **24 detailed examples** covering all features
 
 ### Why Gemini AI Toolkit?
 
@@ -65,7 +66,7 @@
 | **Utilities** | Built-in | External libs |
 | **Error Messages** | Actionable tips | Generic |
 | **Documentation** | Comprehensive | Basic |
-| **Examples** | 16 examples | Few/None |
+| **Examples** | 24 examples | Few/None |
 
 ---
 
@@ -2087,6 +2088,223 @@ const buffer = Buffer.from('data');
 const base64 = bufferToBase64(buffer);
 ```
 
+### Auto-Detection Utilities
+
+Automatically detect MIME types, file types, aspect ratios, and suggest optimal models:
+
+```typescript
+import {
+  detectMimeType,
+  isImage,
+  isVideo,
+  isAudio,
+  isDocument,
+  suggestModel,
+  detectAspectRatio,
+  detectVideoAspectRatio,
+  extractFileName,
+  isBase64,
+  detectMimeTypeFromDataUrl,
+} from 'gemini-ai-toolkit';
+
+// Detect MIME type from file extension
+const mimeType = detectMimeType('image.png'); // 'image/png'
+const mimeType2 = detectMimeType('.jpg'); // 'image/jpeg'
+const mimeType3 = detectMimeType('document.pdf'); // 'application/pdf'
+
+// Check file types
+if (isImage('photo.jpg')) {
+  console.log('This is an image');
+}
+if (isVideo('movie.mp4')) {
+  console.log('This is a video');
+}
+if (isAudio('song.mp3')) {
+  console.log('This is audio');
+}
+if (isDocument('report.pdf')) {
+  console.log('This is a document');
+}
+
+// Suggest optimal model based on use case
+const model = suggestModel('text-generation'); // 'gemini-2.5-flash'
+const imageModel = suggestModel('image-analysis', true); // 'gemini-2.5-flash-image'
+const proModel = suggestModel('complex-reasoning'); // 'gemini-2.5-pro'
+
+// Detect aspect ratios
+const ratio = detectAspectRatio(1920, 1080); // '16:9'
+const square = detectAspectRatio(1080, 1080); // '1:1'
+const portrait = detectAspectRatio(1080, 1920); // '9:16'
+
+// Extract file names
+const fileName = extractFileName('/path/to/image.png'); // 'image.png'
+const fileName2 = extractFileName('image.png'); // 'image.png'
+
+// Check if content is base64
+if (isBase64('data:image/png;base64,iVBORw0KGgo...')) {
+  console.log('This is base64 encoded');
+}
+
+// Detect MIME type from data URL
+const mime = detectMimeTypeFromDataUrl('data:image/png;base64,...'); // 'image/png'
+```
+
+### Auto-Retry Utilities
+
+Automatically retry failed requests with exponential backoff:
+
+```typescript
+import { withAutoRetry, withRetryConfig, type RetryConfig } from 'gemini-ai-toolkit';
+
+// Basic retry with default settings (3 retries, exponential backoff)
+const result = await withAutoRetry(
+  () => generateText('Hello!'),
+  { maxRetries: 5, initialDelay: 2000 }
+);
+
+// Custom retry configuration
+const retryConfig: RetryConfig = {
+  maxRetries: 3,
+  initialDelay: 1000,
+  maxDelay: 30000,
+  backoffMultiplier: 2,
+  retryOnRateLimit: true, // Retry on 429 errors
+  retryOnServerError: true, // Retry on 500, 502, 503, 504
+  shouldRetry: (error, attempt) => {
+    // Custom retry logic
+    if (error instanceof ApiRequestError && error.statusCode === 429) {
+      return attempt < 5; // Retry up to 5 times for rate limits
+    }
+    return false;
+  }
+};
+
+const result2 = await withAutoRetry(
+  () => generateText('Complex prompt'),
+  retryConfig
+);
+
+// Create a retry wrapper with pre-configured settings
+const retryableGenerate = withRetryConfig({ maxRetries: 5 });
+const result3 = await retryableGenerate(() => generateText('Hello!'));
+```
+
+**Features:**
+- ✅ Exponential backoff with jitter
+- ✅ Automatic retry on rate limits (429)
+- ✅ Automatic retry on server errors (500, 502, 503, 504)
+- ✅ Custom retry logic support
+- ✅ Configurable delays and max retries
+
+### Smart Helpers
+
+Intelligent wrappers that auto-detect and simplify common operations:
+
+```typescript
+import {
+  smartUploadFile,
+  smartGenerateText,
+  smartAnalyzeImage,
+  smartGenerateImage,
+  smartCreateChat,
+  smartBatch,
+  GeminiToolkit,
+} from 'gemini-ai-toolkit';
+
+const toolkit = new GeminiToolkit({ apiKey: process.env.GEMINI_API_KEY });
+
+// Smart file upload - auto-detects MIME type and handles both Node.js and browser
+// Node.js
+const file = await smartUploadFile(toolkit, 'image.png');
+
+// Browser
+const fileInput = document.querySelector('input[type="file"]');
+const file2 = await smartUploadFile(toolkit, fileInput.files[0]);
+
+// Smart text generation - auto-selects model based on content
+const text = await smartGenerateText(toolkit, 'Explain AI'); // Uses gemini-2.5-flash
+const imageText = await smartGenerateText(toolkit, 'Describe this', [imageFile]); // Auto-selects image model
+const complexText = await smartGenerateText(toolkit, 'Solve this problem', undefined, true); // Uses Pro model
+
+// Smart image analysis - auto-detects MIME type and handles various inputs
+const analysis = await smartAnalyzeImage(toolkit, 'photo.jpg', 'What is this?'); // From file path
+const analysis2 = await smartAnalyzeImage(toolkit, base64Image, 'Describe this'); // From base64
+const analysis3 = await smartAnalyzeImage(toolkit, fileInput.files[0], 'Analyze'); // From File object
+
+// Smart image generation - auto-retry and better defaults
+const image = await smartGenerateImage(toolkit, 'A robot', '1:1', true); // With auto-retry
+
+// Smart chat creation - auto-model selection
+const chat = smartCreateChat(toolkit); // Uses gemini-2.5-flash
+const proChat = smartCreateChat(toolkit, true); // Uses gemini-2.5-pro
+
+// Smart batch processing - auto-retry and progress tracking
+const results = await smartBatch(
+  toolkit,
+  [
+    () => toolkit.generateText('Prompt 1'),
+    () => toolkit.generateText('Prompt 2'),
+    () => toolkit.generateText('Prompt 3'),
+  ],
+  {
+    concurrency: 2, // Process 2 at a time
+    retry: true, // Auto-retry on errors
+    onProgress: (completed, total) => {
+      console.log(`Progress: ${completed}/${total}`);
+    }
+  }
+);
+```
+
+**Benefits:**
+- ✅ Less boilerplate code
+- ✅ Automatic MIME type detection
+- ✅ Automatic model selection
+- ✅ Built-in error retry
+- ✅ Works in both Node.js and browser
+- ✅ Progress tracking for batch operations
+
+### Request Queuing
+
+Intelligent request queuing for managing rate limits and concurrent requests:
+
+```typescript
+import { createRequestQueue, generateText } from 'gemini-ai-toolkit';
+
+// Create a queue with concurrency limits
+const queue = createRequestQueue({
+  maxConcurrent: 5,        // Max 5 concurrent requests
+  minDelay: 200,           // 200ms minimum between requests
+  autoRetryOnRateLimit: true, // Auto-retry on 429 errors
+  maxQueueSize: 1000       // Max queue size
+});
+
+// Queue requests (automatically manages concurrency and rate limits)
+const result1 = await queue.add(() => generateText('Prompt 1'), 1); // Priority 1
+const result2 = await queue.add(() => generateText('Prompt 2'), 0); // Priority 0 (lower)
+
+// Check queue status
+const status = queue.getStatus();
+console.log(`Queued: ${status.queued}, Running: ${status.running}`);
+
+// Clear queue if needed
+queue.clear();
+```
+
+**Features:**
+- ✅ Automatic concurrency management
+- ✅ Rate limit protection with minimum delays
+- ✅ Priority-based queuing
+- ✅ Automatic retry on rate limit errors
+- ✅ Queue size limits to prevent memory issues
+- ✅ Status monitoring
+
+**Use Cases:**
+- Batch processing with rate limit protection
+- Managing concurrent API calls
+- Preventing 429 rate limit errors
+- Prioritizing important requests
+
 ---
 
 ## ⚠️ Error Handling
@@ -2295,7 +2513,7 @@ const musicConfig: MusicGenerationConfig = {
 
 ## 📖 Examples
 
-We provide **23 comprehensive examples** covering all features:
+We provide **24 comprehensive examples** covering all features:
 
 ### Quick Start
 - **[00-quick-start.ts](./examples/00-quick-start.ts)** - ⚡ Start here! Minimal code examples
@@ -2326,6 +2544,7 @@ We provide **23 comprehensive examples** covering all features:
 - **[18-files-api.ts](./examples/18-files-api.ts)** - Files API for uploading and managing media files
 - **[19-context-caching.ts](./examples/19-context-caching.ts)** - Context caching to reduce costs on repeated requests
 - **[20-token-counting.ts](./examples/20-token-counting.ts)** - Token counting for cost estimation and limits
+- **[24-smart-utilities.ts](./examples/24-smart-utilities.ts)** - Auto-detection, auto-retry, and smart helpers
 
 ### Complete Examples
 - **[13-complete-workflow.ts](./examples/13-complete-workflow.ts)** - End-to-end workflow
