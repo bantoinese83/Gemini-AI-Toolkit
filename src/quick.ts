@@ -9,8 +9,8 @@ import type {
   GenerateImageOptions,
   GenerateVideoOptions,
   GenerateSpeechOptions,
-  GroundedResult,
 } from './geminiService';
+import type { GroundedResult } from './types';
 import type {
   FileSearchUploadConfig,
   FileSearchImportConfig,
@@ -148,11 +148,11 @@ export async function search(
  */
 export async function findNearby(
   query: string,
-  location?: { lat: number; lng: number },
+  location: { lat: number; lng: number },
   model?: string,
   apiKey?: string
 ): Promise<GroundedResult> {
-  const loc = location ? { latitude: location.lat, longitude: location.lng } : undefined;
+  const loc = { latitude: location.lat, longitude: location.lng };
   return getDefaultInstance(apiKey).groundWithMaps(query, loc, model);
 }
 

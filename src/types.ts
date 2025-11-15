@@ -2,6 +2,8 @@
  * @file Type definitions for the Gemini Toolkit package.
  */
 
+import { Modality, LiveServerMessage, GenerateContentResponse } from '@google/genai';
+
 /**
  * Represents a single message in a chat conversation.
  */
@@ -427,4 +429,84 @@ export interface MusicSessionCallbacks {
   onerror: (error: unknown) => void;
   /** Called when the session closes */
   onclose: () => void;
+}
+
+/**
+ * Result from grounded operations (search, maps, URL context).
+ */
+export interface GroundedResult {
+  /** The generated text content */
+  text: string;
+  /** Citation candidates from the grounding source */
+  candidates?: GenerateContentResponse['candidates'];
+  /** Usage metadata for the request */
+  usageMetadata?: UsageMetadata;
+}
+
+/**
+ * Callbacks for live conversation sessions.
+ */
+export interface LiveSessionCallbacks {
+  /** Called when the connection opens */
+  onopen: () => void;
+  /** Called when a message is received */
+  onmessage: (message: LiveServerMessage) => Promise<void> | void;
+  /** Called when an error occurs */
+  onerror: (error: LiveErrorEvent) => void;
+  /** Called when the connection closes */
+  onclose: (event: LiveCloseEvent) => void;
+}
+
+/**
+ * Error event for live sessions.
+ */
+export interface LiveErrorEvent {
+  /** Error message */
+  message: string;
+  /** Error code */
+  code?: number;
+}
+
+/**
+ * Close event for live sessions.
+ */
+export interface LiveCloseEvent {
+  /** Close code */
+  code?: number;
+  /** Close reason */
+  reason?: string;
+}
+
+/**
+ * Options for live conversation sessions.
+ */
+export interface LiveConversationOptions {
+  /** Model to use */
+  model?: string;
+  /** Voice name for speech */
+  voiceName?: string;
+  /** Response modalities */
+  responseModalities?: Modality[];
+  /** Tools to enable */
+  tools?: LiveTool[];
+  /** Enable input audio transcription */
+  inputAudioTranscription?: boolean;
+  /** Enable output audio transcription */
+  outputAudioTranscription?: boolean;
+  /** Context window compression configuration */
+  contextWindowCompression?: ContextWindowCompressionConfig;
+  /** Session resumption configuration */
+  sessionResumption?: SessionResumptionConfig;
+  /** Real-time input configuration */
+  realtimeInputConfig?: RealtimeInputConfig;
+  /** Thinking configuration */
+  thinkingConfig?: ThinkingConfig;
+  /** Enable affective dialog */
+  enableAffectiveDialog?: boolean;
+  /** Proactivity configuration */
+  proactivity?: ProactivityConfig;
+  /** Media resolution settings */
+  mediaResolution?: MediaResolution;
+  /** Temperature setting */
+  temperature?: number;
 }

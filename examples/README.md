@@ -1,152 +1,203 @@
 # Gemini AI Toolkit Examples
 
-This directory contains comprehensive examples demonstrating how to use all features and models of the Gemini AI Toolkit.
+This directory contains comprehensive examples demonstrating how to use the Gemini AI Toolkit effectively. The examples showcase both the legacy monolithic approach and the new service-based architecture.
 
-## Prerequisites
+## 📁 Example Overview
 
-1. Install the toolkit:
-```bash
-npm install gemini-ai-toolkit
-```
+### Core Examples
 
-2. Import in your code:
+#### [`service-based-example.ts`](./service-based-example.ts)
+**Recommended starting point** - Shows the new modular service-based architecture.
+
+- ✅ **Core AI operations**: Text, image, video, speech generation
+- ✅ **Chat conversations**: Interactive chat sessions
+- ✅ **Grounding features**: Google Search, Maps, URL context
+- ✅ **File management**: Upload, list, and manage files
+- ✅ **Context caching**: Cost-effective repeated queries
+- ✅ **Token counting**: Estimate API costs
+
+#### [`advanced-service-example.ts`](./advanced-service-example.ts)
+**Comprehensive showcase** - Demonstrates advanced patterns and real-world usage.
+
+- 🤔 **Thinking-enabled generation**: Step-by-step reasoning
+- 🖼️ **Multimodal analysis**: Image and media understanding
+- 🌐 **Advanced grounding**: Combined search and location queries
+- 📚 **File Search (RAG)**: Document querying with retrieval augmentation
+- 💾 **Context caching**: Efficient repeated interactions
+- 🔢 **Token optimization**: Cost management strategies
+- 🎯 **Live conversation setup**: Real-time interactions
+
+#### [`migration-example.ts`](./migration-example.ts)
+**Transition guide** - Learn how to migrate from monolithic to service-based architecture.
+
+- 📦 **Old vs. new approaches**: Side-by-side comparison
+- 🔄 **Migration strategies**: Gradual, injection, and wrapper patterns
+- 🔙 **Backward compatibility**: Understanding deprecation timeline
+- 🧪 **Testing migration**: Ensuring functionality preservation
+
+### Specialized Examples
+
+#### [`quick-functions-example.ts`](./quick-functions-example.ts)
+**One-line functions** - Perfect for scripts and quick prototyping.
+
 ```typescript
-// Option 1: Class API
-import { GeminiToolkit, saveImage, loadImage, presets } from 'gemini-ai-toolkit';
+import { generateText, generateImage, search } from 'gemini-ai-toolkit';
 
-// Option 2: Quick functions (one-liners)
-import { generateText, generateImage, saveImage, presets } from 'gemini-ai-toolkit';
+const text = await generateText('Hello, world!');
+const image = await generateImage('A sunset over mountains');
+const results = await search('Latest AI developments');
 ```
 
-3. Set your API key as an environment variable:
+#### [`live-conversation-example.ts`](./live-conversation-example.ts)
+**Real-time interactions** - WebSocket-based live conversations.
+
+- 🎤 **Voice conversations**: Real-time speech
+- 🎵 **Music generation**: AI-powered music creation
+- 🔄 **Ephemeral tokens**: Secure temporary sessions
+
+#### [`file-search-rag-example.ts`](./file-search-rag-example.ts)
+**Document intelligence** - Query your documents with AI.
+
+- 📤 **Document upload**: PDF, text, and media files
+- 🔍 **Intelligent querying**: Natural language document search
+- 📊 **Metadata management**: File organization and retrieval
+
+#### [`context-caching-example.ts`](./context-caching-example.ts)
+**Cost optimization** - Reduce API costs with intelligent caching.
+
+- 💰 **Cost reduction**: Up to 90% savings on repeated queries
+- 🧠 **Context preservation**: Maintain conversation state
+- ⏰ **TTL management**: Automatic cache expiration
+
+#### [`error-handling-example.ts`](./error-handling-example.ts)
+**Robust applications** - Comprehensive error handling patterns.
+
+- 🚨 **Custom error types**: Specific error handling
+- 🔄 **Automatic retry**: Built-in resilience
+- 🛡️ **Security**: API key protection and sanitization
+
+## 🚀 Quick Start
+
+### Prerequisites
+
 ```bash
+# Install dependencies
+npm install gemini-ai-toolkit
+
+# Set your API key
 export GEMINI_API_KEY="your-api-key-here"
 ```
 
-Or create a `.env` file:
-```
-GEMINI_API_KEY=your-api-key-here
-```
+### Running Examples
 
-## Examples
-
-### Quick Start (Minimal Code)
-- **[00-quick-start.ts](./00-quick-start.ts)** - ⚡ **Start here!** One-line functions, minimal code
-
-### Basic Usage
-- **[01-basic-text-generation.ts](./01-basic-text-generation.ts)** - Simple text generation
-- **[02-chat-conversation.ts](./02-chat-conversation.ts)** - Chat conversations
-
-### Image Features
-- **[03-image-generation.ts](./03-image-generation.ts)** - Generate images with Imagen 4.0
-- **[04-image-editing.ts](./04-image-editing.ts)** - Edit images with text prompts
-- **[05-image-understanding.ts](./05-image-understanding.ts)** - Analyze images
-
-### Video Features
-- **[06-video-generation.ts](./06-video-generation.ts)** - Generate videos with Veo 3.1
-- **[07-video-understanding.ts](./07-video-understanding.ts)** - Analyze video content
-
-### Audio Features
-- **[08-text-to-speech.ts](./08-text-to-speech.ts)** - Convert text to speech
-- **[09-live-conversation.ts](./09-live-conversation.ts)** - Real-time audio conversations
-
-### Advanced Features
-- **[10-grounded-search.ts](./10-grounded-search.ts)** - Google Search grounding
-- **[11-grounded-maps.ts](./11-grounded-maps.ts)** - Google Maps grounding
-- **[12-thinking-mode.ts](./12-thinking-mode.ts)** - Complex reasoning with thinking mode
-- **[16-file-search-rag.ts](./16-file-search-rag.ts)** - File Search (RAG) with document querying
-- **[17-url-context.ts](./17-url-context.ts)** - URL Context for analyzing web pages and PDFs
-- **[18-files-api.ts](./18-files-api.ts)** - Files API for uploading and managing media files
-- **[19-context-caching.ts](./19-context-caching.ts)** - Context caching to reduce costs on repeated requests
-- **[20-token-counting.ts](./20-token-counting.ts)** - Token counting for cost estimation and limits
-- **[21-live-api-tools.ts](./21-live-api-tools.ts)** - Live API with function calling and Google Search
-- **[22-live-api-session-management.ts](./22-live-api-session-management.ts)** - Live API session management (compression, resumption, VAD)
-- **[23-lyria-music-generation.ts](./23-lyria-music-generation.ts)** - Lyria RealTime music generation with interactive control
-- **[24-smart-utilities.ts](./24-smart-utilities.ts)** - Auto-detection utilities, auto-retry, and smart helpers
-
-### Complete Examples
-- **[13-complete-workflow.ts](./13-complete-workflow.ts)** - End-to-end workflow example
-- **[14-utilities-and-presets.ts](./14-utilities-and-presets.ts)** - Utilities and preset configurations
-- **[15-all-presets.ts](./15-all-presets.ts)** - Comprehensive preset examples for all use cases
-
-## Running Examples
-
-### Using TypeScript directly:
 ```bash
-npx tsx examples/01-basic-text-generation.ts
+# Run the basic service-based example
+npx ts-node examples/service-based-example.ts
+
+# Run the advanced example
+npx ts-node examples/advanced-service-example.ts
+
+# Run the migration guide
+npx ts-node examples/migration-example.ts
 ```
 
-### Using Node.js (after building):
-```bash
-npm run build
-node dist/examples/01-basic-text-generation.js
+## 🏗️ Architecture Comparison
+
+### Legacy Monolithic Approach (Deprecated)
+```typescript
+const toolkit = new GeminiToolkit({ apiKey });
+
+await toolkit.generateText('Hello');        // Direct method call
+await toolkit.createChat();                 // Direct method call
+await toolkit.groundWithSearch('query');    // Direct method call
 ```
 
-### Using ts-node:
-```bash
-npx ts-node examples/01-basic-text-generation.ts
+**Issues:**
+- Large class with many responsibilities
+- Tight coupling between features
+- Harder to test and maintain
+- Violates Single Responsibility Principle
+
+### New Service-Based Approach (Recommended)
+```typescript
+const toolkit = new GeminiToolkit({ apiKey });
+const { coreAI, chat, grounding } = toolkit;
+
+await coreAI.generateText('Hello');         // CoreAIService
+await chat.createChat();                    // ChatService
+await grounding.groundWithSearch('query'); // GroundingService
 ```
 
-## Models Used
+**Benefits:**
+- Single Responsibility Principle
+- Loose coupling between services
+- Easier testing and mocking
+- Better maintainability and scalability
+- Clear separation of concerns
 
-### Text Models
-- `gemini-2.5-flash` - Fast, efficient text generation
-- `gemini-2.5-pro` - Advanced reasoning and complex tasks
-- `gemini-2.5-flash-image` - Image understanding and editing
+## 📚 Service Reference
 
-### Image Models
-- `imagen-4.0-generate-001` - High-quality image generation
+| Service | Responsibility | Key Methods |
+|---------|----------------|-------------|
+| **CoreAIService** | Text, image, video, speech generation | `generateText()`, `generateImage()`, `analyzeMedia()` |
+| **ChatService** | Conversations and live sessions | `createChat()`, `connectLive()`, `createEphemeralToken()` |
+| **GroundingService** | Search, maps, URL context | `groundWithSearch()`, `groundWithMaps()`, `generateWithUrlContext()` |
+| **FileSearchService** | Document RAG operations | `createFileSearchStore()`, `uploadToFileSearchStore()`, `queryWithFileSearch()` |
+| **FilesService** | File management | `uploadFile()`, `getFile()`, `listFiles()`, `deleteFile()` |
+| **CacheService** | Context caching | `createCache()`, `listCaches()`, `getCache()`, `updateCache()` |
+| **TokenService** | Token counting | `countTokens()` |
 
-### Video Models
-- `veo-3.1-fast-generate-preview` - Video generation from images
+## 🎯 Best Practices
 
-### Audio Models
-- `gemini-2.5-flash-preview-tts` - Text-to-speech synthesis
-- `gemini-2.5-flash-native-audio-preview-09-2025` - Live conversations
+### 1. Use Service-Based Architecture
+```typescript
+// ✅ Recommended
+const { coreAI, chat } = toolkit;
+await coreAI.generateText('Hello');
 
-## Error Handling
+// ❌ Avoid (deprecated)
+await toolkit.generateText('Hello');
+```
 
-All examples include proper error handling. Make sure to wrap API calls in try-catch blocks:
-
+### 2. Handle Errors Properly
 ```typescript
 try {
-  const result = await toolkit.generateText('Hello!');
+  const result = await coreAI.generateText('Hello');
 } catch (error) {
-  if (error instanceof ValidationError) {
-    console.error('Invalid input:', error.message);
-  } else if (error instanceof ApiRequestError) {
-    console.error('API error:', error.message);
-  } else {
-    console.error('Unexpected error:', error);
+  if (error instanceof ApiKeyError) {
+    // Handle API key issues
+  } else if (error instanceof ValidationError) {
+    // Handle validation issues
   }
 }
 ```
 
-## Notes
+### 3. Use Context Caching for Repeated Queries
+```typescript
+const cache = await cache.createCache('gemini-2.5-flash', {
+  systemInstruction: 'You are a helpful assistant.',
+  contents: [...],
+  ttl: '3600s'
+});
 
-- Replace `process.env.GEMINI_API_KEY` with your actual API key for testing
-- Some examples require file operations (image/video examples)
-- Live conversation examples require browser environment for audio
-- Video generation may take several minutes to complete
-- File Search (RAG) examples require file uploads - operations are asynchronous and need polling
-- File Search stores persist data indefinitely until manually deleted
-- URL Context examples require publicly accessible URLs (no login/paywall)
-- URL Context supports up to 20 URLs per request, max 34MB per URL
-- Files API: Files are automatically deleted after 48 hours
-- Files API: Use when request size exceeds 20MB or for reusable file references
-- Context Caching: Minimum 2,048 tokens (2.5 Flash) or 4,096 tokens (2.5 Pro)
-- Context Caching: Use explicit model versions (e.g., `gemini-2.0-flash-001`)
-- Token Counting: 1 token ≈ 4 characters, 100 tokens ≈ 60-80 words
-- Live API Tools: Function calling requires manual handling in onmessage callback
-- Live API Tools: Google Search may generate executable code
-- Live API Session: Context compression extends sessions beyond 15 minutes
-- Live API Session: Session resumption tokens valid for 2 hours
-- Live API Session: GoAway messages warn before connection termination
-- Lyria RealTime: Experimental model, requires v1alpha API
-- Lyria RealTime: Output is 16-bit PCM, 48kHz, stereo
-- Lyria RealTime: Reset context after BPM or scale changes
-- Lyria RealTime: Implement robust audio buffering for smooth playback
-- Smart Utilities: Auto-detection utilities automatically detect MIME types, file types, and suggest models
-- Smart Utilities: Auto-retry utilities handle transient errors with exponential backoff
-- Smart Utilities: Smart helpers reduce boilerplate with automatic detection and model selection
+const response = await coreAI.generateText('Question', {
+  cachedContent: cache.name
+});
+```
 
+### 4. Implement Proper Token Management
+```typescript
+// Count tokens before expensive operations
+const count = await tokens.countTokens(largePrompt, 'gemini-2.5-pro');
+if (count.totalTokens > 1000000) {
+  throw new Error('Prompt too large');
+}
+```
+
+## 🤝 Contributing
+
+Found a bug or want to add an example? Open an issue or submit a pull request!
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0 - see the LICENSE file for details.

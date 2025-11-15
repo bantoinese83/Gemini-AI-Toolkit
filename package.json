@@ -1,6 +1,6 @@
 {
   "name": "gemini-ai-toolkit",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "A comprehensive toolkit for the Google Gemini API, providing easy-to-use interfaces for text, chat, image, video, audio, and grounding features with all the latest Gemini models.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -36,7 +36,11 @@
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "example:basic": "npx tsx examples/service-based-example.ts",
+    "example:advanced": "npx tsx examples/advanced-service-example.ts",
+    "example:migration": "npx tsx examples/migration-example.ts",
+    "examples": "echo 'Available examples:' && echo '- npm run example:basic    # Service-based architecture' && echo '- npm run example:advanced  # Advanced patterns' && echo '- npm run example:migration # Migration guide'"
   },
   "keywords": [
     "gemini",

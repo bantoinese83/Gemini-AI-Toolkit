@@ -6,6 +6,15 @@
 // Main class
 export { GeminiToolkit } from './geminiService';
 
+// Service classes for advanced usage
+export { CoreAIService } from './services/CoreAIService';
+export { ChatService } from './services/ChatService';
+export { GroundingService } from './services/GroundingService';
+export { FileSearchService } from './services/FileSearchService';
+export { FilesService } from './services/FilesService';
+export { CacheService } from './services/CacheService';
+export { TokenService } from './services/TokenService';
+
 // Quick convenience functions (minimal code usage)
 export {
   generateText,
@@ -48,8 +57,11 @@ export type {
   LiveSessionCallbacks,
   LiveErrorEvent,
   LiveCloseEvent,
-  GroundedResult,
 } from './geminiService';
+
+export type {
+  GroundedResult,
+} from './types';
 
 // Core types
 export type {

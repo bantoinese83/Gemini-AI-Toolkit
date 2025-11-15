@@ -139,7 +139,87 @@ pnpm add gemini-ai-toolkit
 
 ## 🚀 Quick Start
 
-### Option 1: One-Line Functions (Recommended) ⚡
+### Option 1: Service-Based Architecture (Recommended) 🏗️
+
+**Perfect for applications requiring maintainable, modular code**
+
+```typescript
+import { GeminiToolkit, CoreAIService, ChatService, GroundingService } from 'gemini-ai-toolkit';
+
+// Initialize toolkit once
+const toolkit = new GeminiToolkit({
+  apiKey: 'your-api-key-here' // or set GEMINI_API_KEY env var
+});
+
+// Access service instances directly
+const { coreAI, chat, grounding, fileSearch, files, cache, tokens } = toolkit;
+
+// Core AI operations
+const text = await coreAI.generateText('Explain quantum computing in simple terms');
+const image = await coreAI.generateImage('A futuristic robot in a cyberpunk city');
+
+// Chat conversations
+const chatSession = chat.createChat('gemini-2.5-pro');
+const response = await chatSession.sendMessage({ message: 'Hello!' });
+
+// Grounded search
+const searchResults = await grounding.groundWithSearch('Latest AI developments in 2024');
+
+// File Search (RAG) - query your documents
+const store = await fileSearch.createFileSearchStore('my-documents');
+const operation = await fileSearch.uploadToFileSearchStore('document.pdf', store.name);
+// Wait for operation.done, then query:
+const answer = await fileSearch.queryWithFileSearch('Tell me about X', {
+  fileSearchStoreNames: [store.name]
+});
+
+// Files API - upload and use files
+const file = await files.uploadFile('image.jpg', { displayName: 'My Image' });
+const analysis = await coreAI.generateText('Describe this image', { files: [file] });
+
+// Context Caching - reduce costs on repeated requests
+const cacheObj = await cache.createCache('gemini-2.0-flash-001', {
+  systemInstruction: 'You are a helpful assistant.',
+  contents: [file],
+  ttl: '300s'
+});
+const cachedResult = await coreAI.generateText('What is this?', { cachedContent: cacheObj.name });
+
+// Token Counting - estimate costs
+const tokenCount = await tokens.countTokens('Hello, world!');
+console.log(`Tokens: ${tokenCount.totalTokens}`);
+
+// Live conversations with ephemeral tokens
+const token = await chat.createEphemeralToken({
+  uses: 1,
+  expireTime: new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
+});
+const liveSession = await chat.connectLive({
+  onmessage: async (message) => console.log('Received:', message),
+  onerror: (error) => console.error('Error:', error),
+  onclose: () => console.log('Session closed')
+}, {}, token.name);
+
+// Lyria RealTime music generation (experimental, requires v1alpha)
+const musicSession = await chat.connectMusic({
+  onmessage: async (message) => {
+    if (message.serverContent?.audioChunks) {
+      // Process audio chunks (16-bit PCM, 48kHz, stereo)
+    }
+  },
+  onerror: (error) => console.error('Error:', error),
+  onclose: () => console.log('Session closed')
+});
+await musicSession.setWeightedPrompts({
+  weightedPrompts: [{ text: 'minimal techno', weight: 1.0 }]
+});
+await musicSession.setMusicGenerationConfig({
+  musicGenerationConfig: { bpm: 90, temperature: 1.0 }
+});
+await musicSession.play();
+```
+
+### Option 2: One-Line Functions ⚡
 
 **Perfect for quick scripts and minimal code usage**
 
@@ -197,7 +277,7 @@ await musicSession.setMusicGenerationConfig({
 await musicSession.play();
 ```
 
-### Option 2: Initialize Once, Use Everywhere
+### Option 3: Initialize Once, Use Everywhere
 
 **Best for applications with multiple API calls**
 
@@ -243,6 +323,34 @@ set GEMINI_API_KEY=your-api-key-here
 # Or use a .env file (recommended)
 echo "GEMINI_API_KEY=your-api-key-here" > .env
 ```
+
+---
+
+## 💡 Examples
+
+The toolkit includes comprehensive examples demonstrating different usage patterns. Run them with:
+
+```bash
+# List all available examples
+npm run examples
+
+# Run the basic service-based example (recommended)
+npm run example:basic
+
+# Run the advanced patterns example
+npm run example:advanced
+
+# Run the migration guide
+npm run example:migration
+```
+
+### Example Categories
+
+- **[`examples/service-based-example.ts`](./examples/service-based-example.ts)** - New modular architecture (recommended)
+- **[`examples/advanced-service-example.ts`](./examples/advanced-service-example.ts)** - Advanced patterns and real-world usage
+- **[`examples/migration-example.ts`](./examples/migration-example.ts)** - Migrating from monolithic to service-based
+
+See [`examples/README.md`](./examples/README.md) for detailed documentation of all examples.
 
 ---
 
@@ -770,12 +878,22 @@ const result = await queryWithUrlContextAndSearch(
 
 For applications needing more control, use the class API:
 
-```typescript
-import { GeminiToolkit } from 'gemini-ai-toolkit';
+## 📚 API Reference
 
-const toolkit = new GeminiToolkit({ 
-  apiKey: 'your-api-key-here' 
+### Service-Based Architecture (Recommended)
+
+The toolkit uses a modular service-based architecture for better maintainability and separation of concerns. Each service handles a specific domain of functionality.
+
+```typescript
+import { GeminiToolkit, CoreAIService, ChatService, GroundingService } from 'gemini-ai-toolkit';
+
+// Initialize toolkit once
+const toolkit = new GeminiToolkit({
+  apiKey: 'your-api-key-here'
 });
+
+// Access service instances
+const { coreAI, chat, grounding, fileSearch, files, cache, tokens } = toolkit;
 ```
 
 #### Constructor
@@ -787,7 +905,297 @@ new GeminiToolkit(config: GeminiToolkitConfig)
 **Config:**
 - `apiKey` (string, required): Your Gemini API key
 
-#### Methods
+#### Service Properties
+
+The `GeminiToolkit` class provides the following service instances:
+
+- `coreAI: CoreAIService` - Text, image, video, speech generation
+- `chat: ChatService` - Chat conversations, live sessions, ephemeral tokens
+- `grounding: GroundingService` - Google Search, Maps, URL context
+- `fileSearch: FileSearchService` - File Search (RAG) operations
+- `files: FilesService` - File upload/management operations
+- `cache: CacheService` - Context caching operations
+- `tokens: TokenService` - Token counting operations
+
+#### CoreAIService
+
+Handles core AI generation operations including text, images, videos, and speech.
+
+```typescript
+// Text generation
+const text = await coreAI.generateText('Explain quantum computing', {
+  model: 'gemini-2.5-pro',
+  config: { temperature: 0.7 }
+});
+
+// Image generation
+const imageB64 = await coreAI.generateImage('A futuristic robot', {
+  aspectRatio: '16:9',
+  personGeneration: 'allow_adult'
+});
+
+// Video generation (from image)
+const videoResult = await coreAI.generateVideo(imageB64, 'image/jpeg', 'Make it dance', {
+  durationSeconds: 4,
+  fps: 30
+});
+
+// Image editing
+const editedImage = await coreAI.editImage(existingImageB64, 'image/jpeg', 'Add a hat');
+
+// Media analysis
+const analysis = await coreAI.analyzeMedia(imageB64, 'image/jpeg', 'What do you see?');
+
+// Speech synthesis
+const audioB64 = await coreAI.generateSpeech('Hello, world!', {
+  voiceName: 'Puck',
+  languageCode: 'en-US'
+});
+```
+
+**Methods:**
+- `generateText(prompt, options?)` - Generate text content
+- `generateImage(prompt, options?)` - Generate images
+- `editImage(imageB64, mimeType, prompt, model?)` - Edit existing images
+- `analyzeMedia(data, mimeType, prompt, options?)` - Analyze images/videos/audio
+- `generateVideo(imageB64, mimeType, prompt, options?)` - Generate videos from images
+- `generateSpeech(text, options?)` - Generate speech audio
+
+#### ChatService
+
+Manages chat conversations, live sessions, and ephemeral tokens.
+
+```typescript
+// Create chat sessions
+const chat = chatService.createChat('gemini-2.5-pro');
+const response = await chat.sendMessage({ message: 'Hello!' });
+
+// Ephemeral tokens for live sessions
+const token = await chatService.createEphemeralToken({
+  uses: 1,
+  expireTime: new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
+});
+
+// Live conversation sessions
+const liveSession = await chatService.connectLive({
+  onmessage: async (message) => console.log('Received:', message),
+  onerror: (error) => console.error('Error:', error),
+  onclose: () => console.log('Session closed')
+}, {
+  model: 'gemini-2.0-flash-exp',
+  responseModalities: ['text']
+}, token.name);
+
+// Music generation (experimental)
+const musicSession = await chatService.connectMusic({
+  onmessage: async (message) => {
+    if (message.serverContent?.audioChunks) {
+      // Process 16-bit PCM audio chunks at 48kHz stereo
+    }
+  },
+  onerror: (error) => console.error('Error:', error),
+  onclose: () => console.log('Session closed')
+});
+```
+
+**Methods:**
+- `createChat(model?)` - Create a chat session
+- `createEphemeralToken(config?)` - Create ephemeral tokens for live sessions
+- `connectLive(callbacks, options?, ephemeralToken?)` - Start live conversation
+- `connectMusic(callbacks, apiKey?)` - Start music generation session
+
+#### GroundingService
+
+Provides grounding capabilities with Google Search, Maps, and URL context.
+
+```typescript
+// Ground with Google Search
+const searchResult = await grounding.groundWithSearch(
+  'Latest developments in quantum computing',
+  'gemini-2.5-pro'
+);
+console.log(searchResult.text); // Grounded response
+console.log(searchResult.candidates[0].citationMetadata?.citations); // Citations
+
+// Ground with Google Maps
+const mapsResult = await grounding.groundWithMaps(
+  'Find Italian restaurants near Central Park',
+  { latitude: 40.7829, longitude: -73.9654 },
+  'gemini-2.5-pro'
+);
+
+// Generate with URL context
+const urlResult = await grounding.generateWithUrlContext(
+  'Summarize the main points from this article',
+  'gemini-2.5-pro'
+);
+
+// Combine URL context with search
+const combinedResult = await grounding.generateWithUrlContextAndSearch(
+  'Compare the information from the URL with current developments',
+  'gemini-2.5-pro'
+);
+```
+
+**Methods:**
+- `groundWithSearch(prompt, model?)` - Generate with Google Search grounding
+- `groundWithMaps(prompt, location, model?)` - Generate with Google Maps grounding
+- `generateWithUrlContext(prompt, model?)` - Generate with URL context
+- `generateWithUrlContextAndSearch(prompt, model?)` - Generate with URL context + search
+
+#### FileSearchService
+
+Manages File Search (Retrieval Augmented Generation) operations.
+
+```typescript
+// Create a file search store
+const store = await fileSearch.createFileSearchStore('my-documents');
+console.log(`Store created: ${store.name}`);
+
+// Upload files to the store
+const operation = await fileSearch.uploadToFileSearchStore(
+  'document.pdf',
+  store.name,
+  { mimeType: 'application/pdf' }
+);
+
+// Wait for processing to complete
+// ... (polling logic)
+
+// Query the store
+const answer = await fileSearch.queryWithFileSearch(
+  'What are the key findings?',
+  {
+    fileSearchStoreNames: [store.name],
+    maxNumResults: 5,
+    resultThreshold: 0.7
+  },
+  'gemini-2.5-pro'
+);
+
+// Import existing files
+await fileSearch.importFileToFileSearchStore(
+  store.name,
+  'files/document.pdf',
+  { mimeType: 'application/pdf' }
+);
+
+// List and manage stores
+const stores = await fileSearch.listFileSearchStores();
+const storeInfo = await fileSearch.getFileSearchStore(store.name);
+await fileSearch.deleteFileSearchStore(store.name);
+```
+
+**Methods:**
+- `createFileSearchStore(displayName?)` - Create a new file search store
+- `listFileSearchStores()` - List all file search stores
+- `getFileSearchStore(name)` - Get store details
+- `deleteFileSearchStore(name, force?)` - Delete a store
+- `uploadToFileSearchStore(file, storeName, config?, apiKey?)` - Upload file to store
+- `importFileToFileSearchStore(storeName, fileName, config?)` - Import existing file
+- `queryWithFileSearch(prompt, config, model?)` - Query files with RAG
+
+#### FilesService
+
+Handles file upload, retrieval, listing, and deletion operations.
+
+```typescript
+// Upload files
+const file = await files.uploadFile('image.jpg', {
+  displayName: 'My Image',
+  mimeType: 'image/jpeg'
+});
+console.log(`Uploaded: ${file.name}`);
+
+// Get file information
+const fileInfo = await files.getFile(file.name);
+console.log(`State: ${fileInfo.state}, Size: ${fileInfo.sizeBytes} bytes`);
+
+// List files
+const allFiles = await files.listFiles(10); // max 10 results
+allFiles.files.forEach(f => console.log(`${f.name}: ${f.displayName}`));
+
+// Delete files
+await files.deleteFile(file.name);
+```
+
+**Methods:**
+- `uploadFile(filePath, config?)` - Upload a file
+- `getFile(fileName)` - Get file information
+- `listFiles(pageSize?)` - List uploaded files
+- `deleteFile(fileName)` - Delete a file
+
+#### CacheService
+
+Manages context caching for cost reduction on repeated requests.
+
+```typescript
+// Create a cache
+const cache = await cache.createCache('gemini-2.0-flash-001', {
+  systemInstruction: 'You are a helpful assistant specializing in JavaScript.',
+  contents: [
+    {
+      role: 'user',
+      parts: [{ text: 'Explain closures in JavaScript.' }]
+    },
+    {
+      role: 'model',
+      parts: [{ text: 'Closures are...' }]
+    }
+  ],
+  ttl: '3600s' // 1 hour
+});
+
+// Use cached content
+const response = await coreAI.generateText(
+  'Give me an example of a closure',
+  { cachedContent: cache.name }
+);
+
+// List and manage caches
+const caches = await cache.listCaches();
+const cacheInfo = await cache.getCache(cache.name);
+await cache.updateCache(cache.name, { ttl: '7200s' }); // Extend TTL
+await cache.deleteCache(cache.name);
+```
+
+**Methods:**
+- `createCache(model, config)` - Create a new cache
+- `listCaches()` - List all caches
+- `getCache(cacheName)` - Get cache details
+- `updateCache(cacheName, config)` - Update cache settings
+- `deleteCache(cacheName)` - Delete a cache
+
+#### TokenService
+
+Provides token counting for cost estimation.
+
+```typescript
+// Count tokens in text
+const count = await tokens.countTokens('Hello, world!');
+console.log(`Total tokens: ${count.totalTokens}`);
+
+// Count tokens with model context
+const countWithModel = await tokens.countTokens(
+  'Explain quantum computing',
+  'gemini-2.5-pro'
+);
+
+// Count tokens for multimodal content
+const multimodalCount = await tokens.countTokens([
+  { text: 'Describe this image:' },
+  { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } }
+], 'gemini-2.5-pro');
+```
+
+**Methods:**
+- `countTokens(contents, model?)` - Count tokens in content
+
+### Legacy Direct Methods (Deprecated)
+
+For backward compatibility, the `GeminiToolkit` class still provides direct methods, but these are deprecated. Use the service instances instead.
+
+#### Deprecated Methods
 
 ##### `generateText(prompt, options?)`
 
