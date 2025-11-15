@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-magic"></i> AdFlow Studio</h1>
+            <p>Smart Ad Automation for Small Businesses</p>
+            <p class="subtitle">Transform your product photos into scroll-stopping social media ads automatically</p>
+        </header>
+
+        <div class="main-content">
+            <div class="upload-section">
+                <form id="adForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="productName">
+                            <i class="fas fa-tag"></i> Product Name
+                        </label>
+                        <input type="text" id="productName" name="productName" placeholder="e.g., Premium Coffee Maker" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productDescription">
+                            <i class="fas fa-file-alt"></i> Product Description (Optional)
+                        </label>
+                        <textarea id="productDescription" name="productDescription" rows="3"
+                            placeholder="Describe your product or leave blank to generate from image"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productImage">
+                            <i class="fas fa-camera"></i> Product Image (Optional)
+                        </label>
+                        <input type="file" id="productImage" name="productImage" accept="image/*">
+                        <small>Upload a photo or leave blank to generate one from description</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="targetPlatform">
+                            <i class="fas fa-bullhorn"></i> Target Platform
+                        </label>
+                        <select id="targetPlatform" name="targetPlatform">
+                            <option value="all">All Platforms</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="youtube">YouTube Shorts</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-rocket"></i> Create Amazing Ads
+                    </button>
+                </form>
+            </div>
+
+            <div id="results" class="results-section" style="display: none;">
+                <h2><i class="fas fa-check-circle"></i> Your Ads Are Ready!</h2>
+                <div id="adResults"></div>
+            </div>
+
+            <div id="loading" class="loading-section" style="display: none;">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <h3>Creating your scroll-stopping ads...</h3>
+                <p>This may take a few minutes as we enhance your product and generate videos</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Powered by Gemini AI Toolkit | Built with ❤️ for small businesses</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

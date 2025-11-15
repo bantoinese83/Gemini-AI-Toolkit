@@ -1,0 +1,21 @@
+{
+  "name": "gemini-saas-showcase",
+  "version": "1.0.0",
+  "description": "Gemini AI SaaS Showcase - 7 AI-Powered Business Solutions",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "demo:adflow": "cd ../demos/adflow-studio && npm start",
+    "demo:talkbase": "cd ../demos/talkbase && npm start",
+    "demo:maplens": "cd ../demos/maplens-ai && npm start"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ejs": "^3.1.9",
+    "gemini-ai-toolkit": "file:../"
+  },
+  "keywords": ["ai", "saas", "showcase", "gemini", "business", "automation"],
+  "author": "Gemini AI Toolkit",
+  "license": "Apache-2.0"
+}

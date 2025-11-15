@@ -326,9 +326,35 @@ echo "GEMINI_API_KEY=your-api-key-here" > .env
 
 ---
 
-## 💡 Examples
+## 💡 Examples & Demos
 
-The toolkit includes comprehensive examples demonstrating different usage patterns. Run them with:
+### 🎯 SaaS Showcase (7 Complete Apps)
+
+Experience **7 fully-functional SaaS applications** built with Gemini AI Toolkit:
+
+```bash
+# Install and run the complete SaaS showcase
+npm run demo
+
+# Or run individual demos
+npm run demo:install  # Install dependencies first
+cd demo-showcase && npm start
+```
+
+**Featured Applications:**
+- **AdFlow Studio** - AI-powered social media ad creation
+- **TalkBase** - Conversational knowledge assistant with real-time search
+- **MapLens AI** - Local business content generation with Maps integration
+- **SceneWriter Pro** - Automated video script and storyboard creation
+- **InstaTranscribe** - Real-time audio/video analysis and insights
+- **PixSense** - Photo intelligence and content analysis API
+- **GemVoice** - AI voice companion with contextual conversations
+
+[📖 Complete Showcase Documentation](./demo-showcase/README.md)
+
+### 🔧 Code Examples
+
+The toolkit includes comprehensive code examples demonstrating different usage patterns:
 
 ```bash
 # List all available examples

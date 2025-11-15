@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= app.name %> - Demo</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="/" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Showcase
+            </a>
+            <h1 style="color: <%= app.color %>">
+                <i class="<%= app.icon %>"></i> <%= app.name %>
+            </h1>
+            <p class="tagline"><%= app.tagline %></p>
+            <p class="description"><%= app.description %></p>
+        </header>
+
+        <div class="demo-container">
+            <div class="demo-form">
+                <h3><i class="fas fa-play-circle"></i> Try the Demo</h3>
+
+                <form id="demoForm">
+                    <% app.demoInput.fields.forEach(field => { %>
+                    <div class="form-group">
+                        <label for="<%= field.name %>"><%= field.label %></label>
+                        <% if (field.type === 'textarea') { %>
+                        <textarea id="<%= field.name %>" name="<%= field.name %>"
+                            placeholder="<%= field.placeholder %>"></textarea>
+                        <% } else if (field.type === 'select') { %>
+                        <select id="<%= field.name %>" name="<%= field.name %>">
+                            <% field.options.forEach(option => { %>
+                            <option value="<%= option %>"><%= option %></option>
+                            <% }) %>
+                        </select>
+                        <% } else { %>
+                        <input type="<%= field.type %>" id="<%= field.name %>" name="<%= field.name %>"
+                            placeholder="<%= field.placeholder %>">
+                        <% } %>
+                    </div>
+                    <% }) %>
+
+                    <button type="submit" class="btn-run-demo" style="background-color: <%= app.color %>">
+                        <i class="fas fa-magic"></i> Run Demo
+                    </button>
+                </form>
+            </div>
+
+            <div class="demo-results" id="results" style="display: none;">
+                <h3><i class="fas fa-check-circle"></i> Demo Results</h3>
+                <div id="resultContent"></div>
+            </div>
+
+            <div class="demo-loading" id="loading" style="display: none;">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <h3>Running <%= app.name %> demo...</h3>
+                <p>This may take a few moments as AI processes your request</p>
+            </div>
+        </div>
+
+        <div class="features-highlight">
+            <h3>Key Features</h3>
+            <div class="features-grid">
+                <% app.features.forEach(feature => { %>
+                <div class="feature-item">
+                    <i class="fas fa-star" style="color: <%= app.color %>"></i>
+                    <span><%= feature %></span>
+                </div>
+                <% }) %>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/demo.js"></script>
+    <script>
+        // Set app ID for JavaScript
+        window.appId = '<%= app.id %>';
+        window.appColor = '<%= app.color %>';
+    </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+/* TalkBase - Conversational Knowledge Assistant */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
+
+header h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+header p {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    opacity: 0.9;
+}
+
+.subtitle {
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.chat-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.chat-messages {
+    height: 500px;
+    overflow-y: auto;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.message {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 15px;
+    max-width: 80%;
+    animation: fadeIn 0.3s ease;
+}
+
+.message.user {
+    background: #007bff;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 5px;
+}
+
+.message.assistant {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-bottom-left-radius: 5px;
+}
+
+.message .content {
+    margin-bottom: 10px;
+}
+
+.message .sources {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding-top: 8px;
+    margin-top: 8px;
+}
+
+.message .sources a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.message .timestamp {
+    font-size: 0.7rem;
+    opacity: 0.6;
+}
+
+.chat-input-container {
+    padding: 20px;
+    background: white;
+    border-top: 1px solid #e9ecef;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#message-input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #e1e5e9;
+    border-radius: 25px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+#message-input:focus {
+    border-color: #4facfe;
+}
+
+.send-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.send-btn:hover {
+    background: #218838;
+}
+
+.voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.voice-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.voice-btn:hover {
+    background: #c82333;
+}
+
+.voice-btn.recording {
+    background: #ffc107;
+    color: #000;
+    animation: pulse 1s infinite;
+}
+
+.voice-status {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.features-panel {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    height: fit-content;
+}
+
+.features-panel h3 {
+    margin-bottom: 15px;
+    color: #495057;
+}
+
+.feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    font-size: 0.9rem;
+}
+
+.feature i {
+    color: #4facfe;
+    width: 20px;
+}
+
+footer {
+    text-align: center;
+    color: white;
+    padding: 20px 0;
+    opacity: 0.8;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+
+    .chat-messages {
+        height: 400px;
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+}
